@@ -5,7 +5,6 @@ export const site = {
   github: "https://github.com/kazhang68",
   linkedin: "https://www.linkedin.com/in/kathyzhang-111/",
   resume: "https://docs.google.com/document/d/1ahuyYG2i4bqLGUcgCTlEXR-dkEWrEo-YUtIplRq7wuQ/export?format=pdf",
-  repository: "https://github.com/kazhang68/kathyaixizhang-website",
 };
 
 export function pathTo(path = "") {
