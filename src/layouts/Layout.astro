@@ -1,0 +1,53 @@
+---
+import { pathTo, site } from "../lib/site";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  active?: string;
+}
+const { title, description = site.description, active = "home" } = Astro.props;
+const pageTitle = title ? `${title} / Kathy Zhang` : "Kathy Zhang / A little logic. A lot of curiosity.";
+const nav = [
+  ["about", "About", `${pathTo()}#about`],
+  ["work", "Work", `${pathTo()}#work`],
+  ["blog", "Journal", pathTo("blog/")],
+];
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0d0e10" />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={active === "post" ? "article" : "website"} />
+    <meta property="og:url" content={canonical} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href={pathTo("favicon.svg")} />
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="wordmark" href={pathTo()} aria-label="Kathy Zhang home"><span class="prompt-mark">&gt;_</span> kathy<span class="muted">.zhang</span></a>
+        <nav aria-label="Main navigation">
+          {nav.map(([id, label, href]) => <a href={href} class:list={[{ selected: active === id }]} aria-current={active === id ? "page" : undefined}>{label}</a>)}
+          <a class="nav-contact" href={`mailto:${site.email}`}>Say hello <span aria-hidden="true">&#8599;</span></a>
+        </nav>
+      </header>
+      <main id="main"><slot /></main>
+      <footer class="site-footer">
+        <a class="wordmark" href={pathTo()}><span class="prompt-mark">&gt;_</span> kz<span class="cursor" aria-hidden="true">_</span></a>
+        <p>A work in progress. Just like me.</p>
+        <div><a href={site.github} target="_blank" rel="noopener noreferrer">GitHub &#8599;</a><a href={site.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn &#8599;</a><a href={pathTo("write/")}>Write a post &#8599;</a></div>
+        <span class="copyright">&copy; {new Date().getFullYear()} Kathy Zhang</span>
+      </footer>
+    </div>
+  </body>
+</html>

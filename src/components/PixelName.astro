@@ -1,0 +1,31 @@
+---
+const glyphs = [
+  ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
+  ["01110", "11011", "11011", "11111", "11011", "11011", "11011"],
+  ["11111", "00100", "00100", "00100", "00100", "00100", "00100"],
+  ["11011", "11011", "11011", "11111", "11011", "11011", "11011"],
+  ["11011", "11011", "11011", "01110", "00100", "00100", "00100"],
+];
+const cells = glyphs.flatMap((glyph, letter) =>
+  glyph.flatMap((row, y) =>
+    [...row].flatMap((value, x) => value === "1" ? [{ x: (letter * 6 + x) * 22, y: y * 22, letter, column: letter * 6 + x }] : []),
+  ),
+);
+---
+<div class="pixel-art">
+  <svg class="pixel-name" viewBox="-2 -5 706 195" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="name-rainbow" x1="0" y1="0" x2="690" y2="90" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#46c9eb" /><stop offset=".22" stop-color="#a0da74" /><stop offset=".39" stop-color="#ffcf4a" /><stop offset=".57" stop-color="#ff9c77" /><stop offset=".75" stop-color="#ad78ff" /><stop offset="1" stop-color="#f34aa1" />
+      </linearGradient>
+      <pattern id="dither" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="#0d0e10" /></pattern>
+    </defs>
+    <g fill="url(#name-rainbow)">
+      {cells.map(({ x, y, column }) => <rect class="pixel-cell" x={x} y={y} width="22.25" height="22.25" style={`--delay: ${column * 23 + (6 - y / 22) * 20}ms`} />)}
+      {cells.filter(({ y }) => y >= 110).map(({ x, y, column }) => <rect class="pixel-echo" x={x - 7} y={y + 22} width="22.25" height="24" opacity=".36" style={`--delay: ${column * 23 + 200}ms`} />)}
+      <rect class="pixel-cell" x="665" y="110" width="30" height="22" style="--delay: 850ms" />
+    </g>
+    <path d="M0 88H643V176H0Z" fill="url(#dither)" opacity=".85" />
+  </svg>
+  <div class="pixel-caption"><span>software engineer &amp; curious human</span><span class="caption-coordinate">47.67&#176; N / 122.12&#176; W</span></div>
+</div>

@@ -1,0 +1,24 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { site } from "../lib/site";
+---
+<Layout title="Write a post" active="write">
+  <section class="page-intro write-intro"><div class="section-label"><span class="mint">~/</span> A BLANK PAGE, A NEW RABBIT HOLE</div><h1>Think out loud<span class="mint">.</span></h1><p>Paste your Markdown, bring a file, or start right here.</p></section>
+  <div class="editor-notice">This is a local-first writing desk. Your draft stays in this browser; nothing is uploaded here. Publishing opens GitHub, where only repository collaborators can save a post. A saved post goes live after deployment.</div>
+  <noscript><p class="noscript">The editor needs JavaScript. You can still <a href={`${site.repository}/new/main/src/content/blog`}>write a Markdown post directly on GitHub</a>.</p></noscript>
+  <form class="editor-form" id="editor-form" novalidate>
+    <div class="editor-fields">
+      <label class="wide" for="post-title">POST TITLE<input id="post-title" name="title" type="text" placeholder="Something worth writing down..." maxlength="160" required /></label>
+      <label class="wide" for="post-description">SHORT DESCRIPTION<input id="post-description" name="description" type="text" placeholder="A sentence or two for the journal listing." maxlength="300" required /></label>
+      <label for="post-date">PUBLICATION DATE<input id="post-date" name="date" type="date" required /></label>
+      <label for="post-tags">TAGS <span class="muted">(comma-separated)</span><input id="post-tags" name="tags" type="text" placeholder="Personal, Engineering, Notes" /></label>
+    </div>
+    <div class="editor-toolbar"><span>MARKDOWN IN. IDEAS OUT.</span><div class="editor-tools"><input class="sr-only" id="markdown-file" type="file" accept=".md,.markdown,text/markdown,text/plain" tabindex="-1" /><button class="subtle-button" id="import-file" type="button">Import .md &#8593;</button><button class="subtle-button" id="clear-draft" type="button">Clear draft</button></div></div>
+    <div class="editor-panes" id="drop-zone"><div><h2 class="pane-heading"><label for="post-body">MARKDOWN / drop a .md file or paste a full post here</label></h2><textarea id="post-body" name="body" spellcheck="true" placeholder={"## Start somewhere\n\nA thought, a project, a very specific rabbit hole...\n\nWrite **Markdown** here. The preview is right next door."}></textarea></div><div class="preview-pane"><h2 class="pane-heading" id="preview-heading">LIVE PREVIEW / BODY</h2><div class="prose" id="markdown-preview" role="region" aria-labelledby="preview-heading"></div></div></div>
+    <div class="editor-bottom"><p class="editor-status" id="editor-status" role="status" aria-live="polite">Your draft will be saved automatically in this browser.</p><div class="publish-actions"><button class="button" id="download-post" type="button">Download .md &#8595;</button><a class="button button-light" id="publish-post" href={`${site.repository}/new/main/src/content/blog`} target="_blank" rel="noopener noreferrer" aria-disabled="true">Continue on GitHub &#8599;</a></div></div>
+    <details class="editor-help"><summary>How publishing works</summary><p>The editor creates a Markdown file with title, description, date, and tags in YAML front matter. Continue on GitHub, sign in to your own account, and choose <strong>Commit changes</strong> to save the file to <code>src/content/blog/</code> on <code>main</code>. GitHub Actions rebuilds the site. Anyone can try this editor, but only people with repository write access can publish directly.</p><p>For longer posts, download the generated <code>.md</code> file and use <a href={`${site.repository}/upload/main/src/content/blog`} target="_blank" rel="noopener noreferrer">GitHub's upload page</a>. No access tokens are requested or stored. Importing replaces the current draft after confirmation; supported front matter fields are title, description, date, and tags. Imported posts become public when committed, even if the original file was a draft.</p><p>The preview supports standard Markdown, including code blocks, links, and tables. HTML is sanitized. Avoid private information: published posts and this repository are public. Drafts live only on this browser and device; download a copy before clearing browser data.</p></details>
+  </form>
+</Layout>
+<script>
+  import "../scripts/editor";
+</script>

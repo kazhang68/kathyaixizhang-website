@@ -1,0 +1,52 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import PixelName from "../components/PixelName.astro";
+import PostCard from "../components/PostCard.astro";
+import { pathTo, site } from "../lib/site";
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()).slice(0, 3);
+---
+<Layout>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="terminal-bar"><span><span class="status-dot"></span> personal space on the internet</span><span>v.01 <span class="muted">/</span> always evolving</span></div>
+    <div class="hero-command"><span class="mint">~</span> <span class="muted">/</span> <span>hello, world</span><span class="command-dash"></span><span class="muted">i'm kathy</span></div>
+    <h1 class="sr-only" id="hero-title">Kathy Zhang. Software engineer and curious human.</h1>
+    <PixelName />
+    <div class="rainbow-rule"></div>
+    <div class="hero-bottom">
+      <div><p class="hero-heading">A little logic.<br />A lot of curiosity<span class="mint">.</span></p><p class="hero-description">I build software, tinker with systems, and follow the occasional rabbit hole. Welcome to my little corner of the internet.</p><div class="hero-actions"><a class="button button-light" href="#work">Explore my work <span aria-hidden="true">&#8600;</span></a><a class="text-link" href="#about">More about me <span aria-hidden="true">&#8594;</span></a></div></div>
+      <aside class="hello-card" aria-label="At a glance">
+        <div class="card-window"><span></span><span></span><span></span><span class="window-label">a little context</span></div>
+        <div class="hello-code"><p><span class="purple">const</span> kathy <span class="muted">= &#123;</span></p><p>&nbsp; currently: <span class="code-string">"engineer @ Microsoft"</span>,</p><p>&nbsp; previously: <span class="code-string">"CS @ Cornell"</span>,</p><p>&nbsp; into: <span class="code-string">["AI", "systems",</span></p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="code-string">"figuring things out"]</span></p><p class="muted">&#125;;</p></div>
+        <div class="hello-card-footer"><span class="status-dot"></span> Learning by building.</div>
+      </aside>
+    </div>
+    <div class="hero-footnote"><span>BASED IN THE PACIFIC NORTHWEST</span><a href="#about">SCROLL TO EXPLORE <span aria-hidden="true">&#8595;</span></a></div>
+  </section>
+
+  <section class="section about-section" id="about" aria-labelledby="about-title">
+    <div class="section-label"><span class="mint">01 /</span> THE HUMAN BEHIND THE KEYBOARD</div>
+    <div class="about-grid">
+      <div><h2 id="about-title">Hi, I'm Kathy<span class="mint">.</span><br /><span class="muted">Not just my README.</span></h2><div class="about-symbol" aria-hidden="true"><span>{'{'}</span><span class="symbol-star">&#10035;</span><span>{'}'}</span><small>equal parts logic &amp; curiosity</small></div></div>
+      <div class="about-copy"><p>I'm a software engineer at Microsoft, a Cornell computer science grad, and someone who likes understanding how things work, all the way down.</p><p>At work, that means building data infrastructure, developer tools, and AI agents that make complicated things a little simpler. Away from work, it looks a lot like a homelab: Linux servers, containers, and a backup setup that has become a project of its own.</p><p>This space is a bit of both. Things I've made, things I'm learning, and notes from the rabbit holes along the way.</p><a class="text-link" href={`mailto:${site.email}`}>Always happy to say hello <span aria-hidden="true">&#8599;</span></a><div class="interest-tags"><span>building &amp; breaking things</span><span>self-hosting</span><span>lifelong learning</span></div></div>
+    </div>
+  </section>
+
+  <section class="section" id="work" aria-labelledby="work-title">
+    <div class="section-label"><span class="mint">02 /</span> THINGS I'VE PUT MY MIND TO</div>
+    <div class="section-heading"><h2 id="work-title">The work<span class="mint">.</span></h2><a class="text-link" href={site.resume} target="_blank" rel="noopener noreferrer">Full resume <span aria-hidden="true">&#8599;</span></a></div>
+    <div class="work-list">
+      <article class="work-row"><div class="work-company"><span class="company-icon microsoft-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div><h3>Microsoft</h3><span>Apr 2021 &mdash; present</span></div></div><div class="work-detail"><h3>Software Engineer II</h3><p>Building reliable data pipelines, untangling query-generation systems, and developing AI-powered tools that help people get things done.</p><div class="work-tags"><span>Azure &amp; data infrastructure</span><span>Developer tooling</span><span>AI agents</span></div></div><span class="work-number">01</span></article>
+      <article class="work-row"><div class="work-company"><span class="company-icon meta-icon" aria-hidden="true">&#8734;</span><div><h3>Meta</h3><span>Jun &mdash; Aug 2020</span></div></div><div class="work-detail"><h3>Software Engineer Intern</h3><p>Built a web application to compare image-recognition models and visualize their product recommendations for marketplace data.</p><div class="work-tags"><span>React</span><span>Hack</span><span>Model evaluation</span></div></div><span class="work-number">02</span></article>
+      <article class="work-row"><div class="work-company"><span class="company-icon homelab-icon" aria-hidden="true">&gt;_</span><div><h3>The homelab</h3><span>An ongoing side quest</span></div></div><div class="work-detail"><h3>Builder, maintainer &amp; occasional debugger</h3><p>Self-hosted applications on Unraid and Ubuntu, containerized services, reverse proxies, and a dedicated backup server with SnapRAID and mergerfs.</p><div class="work-tags"><span>Linux</span><span>Docker</span><span>Networking &amp; storage</span></div></div><span class="work-number">03</span></article>
+    </div>
+  </section>
+
+  <section class="section journal-section" aria-labelledby="journal-title">
+    <div class="section-label"><span class="mint">03 /</span> NOTES FROM THE RABBIT HOLE</div>
+    <div class="section-heading"><div><h2 id="journal-title">The journal<span class="mint">.</span></h2><p class="section-subtitle">A place for things worth writing down.</p></div><a class="text-link" href={pathTo("blog/")}>All entries <span aria-hidden="true">&#8594;</span></a></div>
+    {posts.length ? <div class:list={["posts-grid", { "single-post": posts.length === 1 }]}>{posts.map((post, index) => <PostCard post={post} index={index} />)}</div> : <p class="empty-state">A blank page, for now. More soon.</p>}
+  </section>
+
+  <section class="contact-section" aria-labelledby="contact-title"><div><div class="section-label"><span class="mint">04 /</span> KEEP THE CONVERSATION GOING</div><h2 id="contact-title">Good things start<br />with a <span class="contact-hello">hello.</span></h2><p>Have something interesting in mind? I'd love to hear it.</p><a class="contact-email" href={`mailto:${site.email}`}>{site.email} <span aria-hidden="true">&#8599;</span></a></div><span class="contact-asterisk" aria-hidden="true">&#10035;</span></section>
+</Layout>
