@@ -106,41 +106,64 @@ test("terminal theme uses real text art and readable accent colors", async ({ pa
   })).toBe(true);
 });
 
-test("text is predominantly neutral with only selective color highlights", async ({ page }) => {
+test("titles and every hero focus area have color while body copy stays neutral", async ({ page }) => {
   for (const route of ["./", "blog/", "blog/hello-world/"]) {
     await page.goto(route);
     const neutralFraction = await page.evaluate(() => {
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       let total = 0;
       let neutral = 0;
+      let bodyTotal = 0;
+      let bodyNeutral = 0;
       while (walker.nextNode()) {
         const element = walker.currentNode.parentElement;
         const text = walker.currentNode.textContent?.trim() || "";
         if (!element || !text || element.closest('pre, [aria-hidden="true"], .sr-only, .skip-link, script, style') || !element.getClientRects().length) continue;
         const channels = getComputedStyle(element).color.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+        const isNeutral = Math.max(...channels) - Math.min(...channels) <= 20;
         total += text.length;
-        if (Math.max(...channels) - Math.min(...channels) <= 20) neutral += text.length;
+        if (isNeutral) neutral += text.length;
+        if (element.closest(".about-copy p, .work-detail p, .work-highlights li, .post-card > p, .page-intro p, .article-header > p, .prose p, .prose li") && !element.closest("code, a")) {
+          bodyTotal += text.length;
+          if (isNeutral) bodyNeutral += text.length;
+        }
       }
-      return neutral / total;
+      return { all: neutral / total, body: bodyNeutral / bodyTotal };
     });
-    expect(neutralFraction, route).toBeGreaterThan(.9);
-    const headingColors = await page.locator("h2, .hero-heading, .work-detail h3, .profile-card dd, .post-card h3, .article-header h1").evaluateAll((headings) =>
+    expect(neutralFraction.all, route).toBeGreaterThan(.7);
+    expect(neutralFraction.body, route).toBeGreaterThan(.9);
+    const headingColors = await page.locator("h2, .work-detail h3, .post-card h3, .page-intro h1, .article-header h1").evaluateAll((headings) =>
       headings.map((heading) => getComputedStyle(heading).color),
     );
-    for (const color of headingColors) expect(color).toBe("rgb(230, 230, 239)");
+    for (const color of headingColors) expect(["rgb(0, 200, 255)", "rgb(255, 230, 0)", "rgb(196, 107, 255)", "rgb(255, 66, 189)", "rgb(114, 246, 0)"]).toContain(color);
   }
+  await page.goto("./");
+  await expect(page.locator(".hero-description span")).toHaveText(["Azure data pipelines", "developer tools", "AI agents"]);
+  expect(await page.locator(".hero-description span").evaluateAll((terms) => terms.map((term) => getComputedStyle(term).color))).toEqual(["rgb(0, 200, 255)", "rgb(196, 107, 255)", "rgb(255, 66, 189)"]);
+  await expect(page.locator(".hero-heading .term-yellow")).toHaveCSS("color", "rgb(255, 230, 0)");
+  await expect(page.locator(".hero-heading .term-cyan")).toHaveCSS("color", "rgb(0, 200, 255)");
+  await expect(page.locator(".hero-description")).toContainText("financial reporting");
+  await expect(page.locator(".work-microsoft .work-highlights li")).toHaveCount(3);
+  await expect(page.locator(".work-microsoft")).toContainText("multi-million-row");
+  await expect(page.locator(".work-microsoft")).toContainText("~3 weeks to ~1 hour");
+  await expect(page.locator(".work-microsoft")).toContainText("with engineering review");
 });
 
-test("header draws the lowercase full name with smaller lettering and real ascenders and descenders", async ({ page }) => {
+test("header uses the original DOS Rebel lowercase glyphs with compact full-name layout", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("./");
   await expect(page.locator(".pixel-name")).toHaveAttribute("data-text", "kathy zhang");
+  await expect(page.locator(".pixel-name")).toHaveAttribute("data-font", "DOS Rebel");
   await expect(page.locator(".pixel-caption").locator("span").first()).toHaveText("kathy zhang");
   const glyphs = await page.locator(".pixel-letter").evaluateAll((letters) => letters.map((letter) => {
-    const boxes = [...letter.querySelectorAll(".pixel-cell")].map((cell) => cell.getBoundingClientRect());
+    const cells = [...letter.querySelectorAll<HTMLElement>(".pixel-cell")];
+    const boxes = cells.map((cell) => cell.getBoundingClientRect());
+    const rows = new Map<string, number>();
+    for (const cell of cells) rows.set(cell.style.top, (rows.get(cell.style.top) || 0) + 1);
     return {
       character: letter.getAttribute("data-letter"),
+      rowWidths: [...rows.values()],
       top: Math.min(...boxes.map((box) => box.top)),
       bottom: Math.max(...boxes.map((box) => box.bottom)),
       left: Math.min(...boxes.map((box) => box.left)),
@@ -148,6 +171,9 @@ test("header draws the lowercase full name with smaller lettering and real ascen
     };
   }));
   expect(glyphs.map(({ character }) => character).join("")).toBe("kathyzhang");
+  expect(glyphs[0].rowWidths).toEqual([5, 3, 8, 6, 6, 6, 9]);
+  expect(glyphs[1].rowWidths).toEqual([6, 3, 7, 6, 8]);
+  expect(glyphs[9].rowWidths).toEqual([7, 6, 6, 6, 7, 3, 6, 6]);
   expect(glyphs[1].top - glyphs[0].top).toBeGreaterThan(15);
   expect(glyphs[4].bottom - glyphs[3].bottom).toBeGreaterThan(15);
   expect(glyphs[9].bottom - glyphs[8].bottom).toBeGreaterThan(15);
@@ -168,34 +194,39 @@ test("header draws the lowercase full name with smaller lettering and real ascen
       };
     });
     expect(dimensions.width).toBeLessThanOrEqual(880);
-    expect(dimensions.height).toBeLessThan(140);
+    expect(dimensions.height).toBeLessThan(160);
     expect(dimensions.height).toBeGreaterThan(40);
     expect(dimensions.contained).toBe(true);
   }
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Kathy Zhang");
 });
 
-test("fine lettering has diagonal color detail and dotted extrusion; work art has recognizable logos", async ({ page }) => {
+test("native block lettering has diagonal color and dotted shading; work art has recognizable logos", async ({ page }) => {
   await page.goto("./");
   const detail = await page.locator(".pixel-name").evaluate((art) => {
     const faces = [...art.querySelectorAll<HTMLElement>(".pixel-cell")];
     const shadows = [...art.querySelectorAll(".pixel-echo")];
-    const column = faces.filter((cell) => cell.style.left === faces[0].style.left);
+    const columns = new Map<string, Set<string>>();
+    for (const cell of faces) {
+      const colors = columns.get(cell.style.left) || new Set<string>();
+      colors.add(cell.style.color);
+      columns.set(cell.style.left, colors);
+    }
     return {
       cells: faces.length,
       rows: new Set(faces.map((cell) => cell.style.top)).size,
       colors: new Set(faces.map((cell) => cell.style.color)).size,
-      verticalColors: new Set(column.map((cell) => cell.style.color)).size,
-      edges: faces.some((cell) => /[▘▝▖▗▙▚▛▜▞▟]/.test(cell.textContent || "")),
+      verticalColors: Math.max(...[...columns.values()].map((colors) => colors.size)),
+      blocks: faces.every((cell) => cell.textContent === "█"),
       shadows: shadows.length,
-      dots: shadows.every((cell) => /^[\u2801-\u28ff]$/.test(cell.textContent || "")),
+      dots: shadows.every((cell) => cell.textContent === "░"),
     };
   });
-  expect(detail.cells).toBeGreaterThan(600);
-  expect(detail.rows).toBeGreaterThanOrEqual(14);
-  expect(detail.colors).toBeGreaterThan(200);
-  expect(detail.verticalColors).toBeGreaterThan(8);
-  expect(detail.edges).toBe(true);
+  expect(detail.cells).toBeGreaterThan(250);
+  expect(detail.rows).toBe(10);
+  expect(detail.colors).toBeGreaterThan(120);
+  expect(detail.verticalColors).toBeGreaterThanOrEqual(7);
+  expect(detail.blocks).toBe(true);
   expect(detail.shadows).toBeGreaterThan(100);
   expect(detail.dots).toBe(true);
   for (const pane of ["red", "green", "blue", "gold"]) {

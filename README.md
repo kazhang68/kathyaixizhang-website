@@ -47,14 +47,18 @@ Set `draft: true` to keep a post out of the built site (the source is still publ
 
 Site copy uses factual headings and resume-supported details. The About section has no decorative interest badges. Journal topic buttons filter posts; article topics are shown as plain metadata.
 
-The interface uses monospace typography with mostly white and gray text. Color is reserved for a few highlighted terms, small navigation/section markers, selected controls, and artwork. The header spells `kathy zhang` in compact lowercase block lettering with ascenders and descenders, a continuous diagonal rainbow, and offset dotted shadows. The full name stays on one line and scales with the available width. Work illustrations include a four-color waving Windows flag, an infinity loop, and a server rack; journal thumbnails use more detailed preformatted drawings. Decorative art is hidden from screen readers, with real text headings and link labels provided separately.
+The interface uses monospace typography with mostly white and gray body copy. Titles, all three hero focus areas, profile facts, and small controls use coordinated terminal colors; paragraphs, dates, and tags stay neutral. The experience summary emphasizes financial-reporting systems and concrete, resume-supported accomplishments rather than just listing technologies.
+
+The header spells `kathy zhang` using the original lowercase DOS Rebel FIGlet glyphs and their built-in dotted shading, rather than drawn polygon approximations. A continuous diagonal rainbow and left-to-right decoding animate the letters. The full name stays on one line and scales with the available width. The glyph subset is embedded at build time, with no new dependency or browser font request; attribution and the collection's distribution notice are in [`public/font-credits.txt`](public/font-credits.txt).
+
+Work illustrations include a four-color waving Windows flag, an infinity loop, and a server rack; journal thumbnails use more detailed preformatted drawings. Decorative art is hidden from screen readers, with real text headings and link labels provided separately.
 
 - `src/pages/index.astro`: About, experience, and homepage copy.
 - `src/lib/site.ts`: contact, social, and resume links.
-- `src/components/PixelName.astro`: lowercase glyph outlines/counters, the full-name character sequence, diagonal rainbow stops, dotted extrusion, left-to-right code decoding, and the decorative blinking caret. Timing includes both face and shadow generation so the caret appears only after the whole illustration completes.
+- `src/components/PixelName.astro`: the DOS Rebel lowercase glyph subset, full-name character sequence, diagonal rainbow stops, original dotted shading, left-to-right code decoding, and the decorative blinking caret. Timing includes both face and shadow generation so the caret appears only after the whole illustration completes.
 - `src/components/AsciiArt.astro`: shared text drawings for work icons and journal thumbnails.
-- `src/lib/text-art.ts`: shared quarter-block and Braille-dot sampling for smooth character-art edges and shadows. All artwork is generated at build time, not drawn with browser JavaScript.
-- `src/styles/global.css`: restrained text accents, typography, layout, and reduced-motion rules (static lettering, shadows, and caret, without the decoding or blink).
+- `src/lib/text-art.ts`: shared quarter-block and Braille-dot sampling for the work illustrations. All artwork is generated at build time, not drawn with browser JavaScript.
+- `src/styles/global.css`: coordinated title/term accents, neutral body typography, layout, and reduced-motion rules (static lettering, shadows, and caret, without the decoding or blink).
 - `src/content/blog/`: Markdown entries.
 
 ## Hosting

@@ -1,61 +1,58 @@
 ---
-import { blockAt, dotsAt, insidePolygon, type Point } from "../lib/text-art";
-
-interface Glyph { width: number; outlines: Point[][]; counters?: Point[][]; }
-const glyphs: Record<"k" | "a" | "t" | "h" | "y" | "z" | "n" | "g", Glyph> = {
-  k: { width: 21, outlines: [
-    [[0, 0], [5, 0], [5, 14], [0, 14]],
-    [[5, 8], [14, 4], [21, 4], [11, 9]],
-    [[5, 8], [10, 7], [21, 14], [14, 14]],
-  ] },
-  a: { width: 20, outlines: [
-    [[2, 4], [16, 4], [20, 6], [20, 14], [4, 14], [0, 12], [0, 9], [4, 7], [15, 7], [15, 6], [2, 6]],
-  ], counters: [
-    [[5, 9], [15, 9], [15, 12], [5, 12]],
-  ] },
-  t: { width: 16, outlines: [
-    [[5, 1], [10, 1], [10, 4], [16, 4], [16, 7], [10, 7], [10, 11], [12, 12], [16, 12], [16, 14], [9, 14], [5, 12], [5, 7], [0, 7], [0, 4], [5, 4]],
-  ] },
-  h: { width: 20, outlines: [
-    [[0, 0], [5, 0], [5, 5], [8, 4], [16, 4], [20, 6], [20, 14], [15, 14], [15, 7], [5, 7], [5, 14], [0, 14]],
-  ] },
-  y: { width: 20, outlines: [
-    [[0, 4], [5, 4], [5, 10], [7, 11], [15, 11], [15, 4], [20, 4], [20, 16], [16, 18], [3, 18], [3, 15], [15, 15], [15, 14], [4, 14], [0, 12]],
-  ] },
-  z: { width: 20, outlines: [
-    [[0, 4], [20, 4], [20, 7], [7, 11], [20, 11], [20, 14], [0, 14], [0, 11], [13, 7], [0, 7]],
-  ] },
-  n: { width: 20, outlines: [
-    [[0, 4], [5, 4], [5, 5], [8, 4], [16, 4], [20, 6], [20, 14], [15, 14], [15, 7], [5, 7], [5, 14], [0, 14]],
-  ] },
-  g: { width: 20, outlines: [
-    [[4, 4], [20, 4], [20, 16], [16, 18], [3, 18], [3, 15], [15, 15], [15, 14], [4, 14], [0, 12], [0, 6]],
-  ], counters: [
-    [[5, 7], [15, 7], [15, 11], [5, 11]],
-  ] },
+// DOS Rebel by Valerie Mates, based on Ron Bliss. See public/font-credits.txt.
+const glyphs: Record<"k" | "a" | "t" | "h" | "y" | "z" | "n" | "g", string[]> = {
+  k: [
+    " █████", "░░███", " ░███ █████", " ░███░░███",
+    " ░██████░", " ░███░░███", " ████ █████", "░░░░ ░░░░░",
+  ],
+  a: [
+    "", "", "  ██████", " ░░░░░███", "  ███████",
+    " ███░░███", "░░████████", " ░░░░░░░░",
+  ],
+  t: [
+    "  █████", " ░░███", " ███████", "░░░███░",
+    "  ░███", "  ░███ ███", "  ░░█████", "   ░░░░░",
+  ],
+  h: [
+    " █████", "░░███", " ░███████", " ░███░░███",
+    " ░███ ░███", " ░███ ░███", " ████ █████", "░░░░ ░░░░░",
+  ],
+  y: [
+    "", "", " █████ ████", "░░███ ░███", " ░███ ░███",
+    " ░███ ░███", " ░░███████", "  ░░░░░███", "  ███ ░███",
+    " ░░██████", "  ░░░░░░",
+  ],
+  z: [
+    "", "", "  █████████", " ░█░░░░███", " ░   ███░",
+    "   ███░   █", "  █████████", " ░░░░░░░░░",
+  ],
+  n: [
+    "", "", " ████████", "░░███░░███", " ░███ ░███",
+    " ░███ ░███", " ████ █████", "░░░░ ░░░░░",
+  ],
+  g: [
+    "", "", "  ███████", " ███░░███", "░███ ░███",
+    "░███ ░███", "░░███████", " ░░░░░███", " ███ ░███",
+    "░░██████", " ░░░░░░",
+  ],
 };
 const name = ["k", "a", "t", "h", "y", " ", "z", "h", "a", "n", "g"] as const;
-let cursor = 4;
+let cursor = 1;
 const letters = name.flatMap((character) => {
   if (character === " ") {
-    cursor += 8;
+    cursor += 6;
     return [];
   }
   const glyph = glyphs[character];
-  const letter = { ...glyph, character, start: cursor };
-  cursor += glyph.width + 4;
+  const width = Math.max(...glyph.map((row) => row.length));
+  const letter = { glyph, width, character, start: cursor };
+  cursor += width + 1;
   return [letter];
 });
-const columns = cursor + 4;
-const glyphHeight = 18;
-const rows = glyphHeight + 5;
+const columns = cursor + 3;
+const glyphHeight = 10;
+const rows = glyphHeight + 3;
 const letterAt = (x: number) => letters.findIndex(({ start, width }) => x >= start && x < start + width);
-const faceAt = (x: number, y: number) => {
-  const letter = letters[letterAt(x)];
-  return !!letter
-    && letter.outlines.some((outline) => insidePolygon(x - letter.start, y - 1, outline))
-    && !letter.counters?.some((counter) => insidePolygon(x - letter.start, y - 1, counter));
-};
 const colors = [
   [0, 126, 255], [0, 186, 237], [65, 215, 180], [207, 222, 47],
   [255, 216, 0], [255, 174, 74], [197, 131, 186], [130, 65, 255],
@@ -69,22 +66,20 @@ const colorAt = (x: number, y: number) => {
   return `rgb(${colors[start].map((channel, i) => Math.round(channel + (colors[end][i] - channel) * (band - start))).join(" ")})`;
 };
 const matrix = Array.from({ length: rows }, (_, y) =>
-  Array.from({ length: columns }, (_, x) => ({
-    x, y,
-    character: blockAt(faceAt, x, y),
-    letter: letterAt(x),
-    color: colorAt(x, y),
-    delay: Math.round(x / columns * 1700) + (x * 17 + y * 31) % 90,
-  })),
+  Array.from({ length: columns }, (_, x) => {
+    const index = letterAt(x);
+    const letter = letters[index];
+    return {
+      x, y,
+      character: letter ? letter.glyph[y - 1]?.[x - letter.start] ?? " " : " ",
+      letter: index,
+      color: colorAt(x, y),
+      delay: Math.round(x / columns * 1700) + (x * 17 + y * 31) % 90,
+    };
+  }),
 ).flat();
-const cells = matrix.filter(({ character }) => character !== " ");
-const shadows = matrix.filter(({ character }) => character === " ").flatMap((cell) => {
-  for (let depth = 1; depth <= 3; depth++) {
-    const character = dotsAt((x, y) => faceAt(x + depth, y - depth), cell.x, cell.y);
-    if (character !== " ") return [{ ...cell, letter: letterAt(cell.x + depth), character, opacity: depth === 1 ? .65 : .45 }];
-  }
-  return [];
-});
+const cells = matrix.filter(({ character }) => character === "█");
+const shadows = matrix.filter(({ character }) => character === "░");
 const noise = matrix.filter(({ x, y }) => (x * 13 + y * 7) % 11 === 0 && y <= glyphHeight);
 const decodeDuration = 480;
 const shadowDuration = 240;
@@ -98,6 +93,6 @@ const cellStyle = ({ x, y, delay, color }: typeof matrix[number]) =>
   `left:${x / columns * 100}%;top:${y / rows * 100}%;--delay:${delay}ms;color:${color}`;
 ---
 <div class="pixel-art" style={`--columns:${columns};--rows:${rows};--glyph-height:${glyphHeight};--decode-duration:${decodeDuration}ms;--shadow-duration:${shadowDuration}ms;--shadow-offset:${shadowOffset}ms;--render-duration:${renderDuration}ms`}>
-  <pre class="pixel-name" data-text={name.join("")} aria-hidden="true">{letters.map((letter, index) => <span class="pixel-letter" data-letter={letter.character}>{shadows.filter((cell) => cell.letter === index).map((cell) => <span class="pixel-echo" style={`${cellStyle(cell)};--shadow-opacity:${cell.opacity}`}>{cell.character}</span>)}{cells.filter((cell) => cell.letter === index).map((cell) => <span class="pixel-cell" style={cellStyle(cell)}>{cell.character}</span>)}</span>)}{noise.map((cell) => <span class="pixel-noise" style={cellStyle(cell)}>{["0", "1", "/", "_", "{", "}", "<", ">"][(cell.x * 7 + cell.y * 13) % 8]}</span>)}<span class="pixel-scan"></span><span class="pixel-caret">|</span></pre>
+  <pre class="pixel-name" data-text={name.join("")} data-font="DOS Rebel" aria-hidden="true">{letters.map((letter, index) => <span class="pixel-letter" data-letter={letter.character}>{shadows.filter((cell) => cell.letter === index).map((cell) => <span class="pixel-echo" style={`${cellStyle(cell)};--shadow-opacity:.85`}>{cell.character}</span>)}{cells.filter((cell) => cell.letter === index).map((cell) => <span class="pixel-cell" style={cellStyle(cell)}>{cell.character}</span>)}</span>)}{noise.map((cell) => <span class="pixel-noise" style={cellStyle(cell)}>{["0", "1", "/", "_", "{", "}", "<", ">"][(cell.x * 7 + cell.y * 13) % 8]}</span>)}<span class="pixel-scan"></span><span class="pixel-caret">|</span></pre>
   <div class="pixel-caption"><span>{name.join("")}</span><span>Software Engineer</span></div>
 </div>
