@@ -51,14 +51,15 @@ h1, h2, h3, p { margin-top: 0; }
 .site-header .nav-contact { border: 1px solid var(--line); color: var(--text); padding: 10px 14px; border-radius: 0; }
 .nav-contact span { margin-left: 13px; color: var(--mint); }
 .hero { padding-top: 55px; }
-.pixel-art { max-width: 940px; margin: 0 auto; container-type: inline-size; }
+.pixel-art { max-width: 880px; margin: 0 auto; container-type: inline-size; }
 .pixel-name { width: 100%; aspect-ratio: calc(var(--columns) * .6 / var(--rows)); position: relative; margin: 0; font: 400 calc(100cqw / var(--columns) / .6)/1 var(--mono); white-space: pre; user-select: none; }
+.pixel-letter { display: contents; }
 .pixel-cell, .pixel-echo, .pixel-noise { position: absolute; }
 .pixel-cell { animation: decode-pixel var(--decode-duration) steps(1, end) both; animation-delay: var(--delay); }
 .pixel-echo { opacity: var(--shadow-opacity); animation: reveal-echo var(--shadow-duration) steps(3, end) both; animation-delay: calc(var(--delay) + var(--shadow-offset)); }
 .pixel-noise { font-size: .7em; opacity: 0; animation: decode-noise var(--decode-duration) steps(1, end) both; animation-delay: var(--delay); }
-.pixel-scan { position: absolute; top: calc(100% / var(--rows)); width: 1px; height: calc(17 / var(--rows) * 100%); background: var(--cyan); opacity: 0; animation: scan-name var(--render-duration) linear both; }
-.pixel-caret { position: absolute; top: calc(100% / var(--rows)); left: calc((var(--columns) - 3) / var(--columns) * 100%); height: calc(14 / var(--rows) * 100%); border-left: .22cqw solid var(--pink); font-size: 0; opacity: 0; animation: caret-blink 1.1s steps(1, end) infinite; animation-delay: var(--render-duration); }
+.pixel-scan { position: absolute; top: calc(100% / var(--rows)); width: 1px; height: calc((var(--glyph-height) + 3) / var(--rows) * 100%); background: var(--cyan); opacity: 0; animation: scan-name var(--render-duration) linear both; }
+.pixel-caret { position: absolute; top: calc(100% / var(--rows)); left: calc((var(--columns) - 3) / var(--columns) * 100%); height: calc(var(--glyph-height) / var(--rows) * 100%); border-left: .22cqw solid var(--pink); font-size: 0; opacity: 0; animation: caret-blink 1.1s steps(1, end) infinite; animation-delay: var(--render-duration); }
 @keyframes decode-pixel { 0%, 35% { opacity: 0; } 55% { opacity: .3; } 75% { opacity: .65; } 85% { opacity: .4; } 100% { opacity: 1; } }
 @keyframes reveal-echo { from { opacity: 0; } to { opacity: var(--shadow-opacity); } }
 @keyframes decode-noise { 0% { opacity: 0; } 15% { opacity: .65; } 55% { opacity: .3; } 75%, 100% { opacity: 0; } }
@@ -176,7 +177,7 @@ h2 { font-size: clamp(25px, 2.6vw, 32px); line-height: 1.3; font-weight: 500; le
 .article-end { border-top: 1px solid var(--line); margin-top: 50px; padding-top: 29px; }
 .not-found { min-height: 70vh; }
 .not-found .button { margin-top: 30px; }
-@media (min-width: 1500px) { .site-shell { width: min(1200px, calc(100% - 160px)); }.hero-bottom { gap: 140px; }.pixel-art { max-width: 1020px; } }
+@media (min-width: 1500px) { .site-shell { width: min(1200px, calc(100% - 160px)); }.hero-bottom { gap: 140px; } }
 @media (max-width: 1000px) {
   .site-shell { width: calc(100% - 64px); }
   .hero-bottom { gap: 36px; }

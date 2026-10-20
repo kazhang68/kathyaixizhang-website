@@ -131,6 +131,50 @@ test("text is predominantly neutral with only selective color highlights", async
   }
 });
 
+test("header draws the lowercase full name with smaller lettering and real ascenders and descenders", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("./");
+  await expect(page.locator(".pixel-name")).toHaveAttribute("data-text", "kathy zhang");
+  await expect(page.locator(".pixel-caption").locator("span").first()).toHaveText("kathy zhang");
+  const glyphs = await page.locator(".pixel-letter").evaluateAll((letters) => letters.map((letter) => {
+    const boxes = [...letter.querySelectorAll(".pixel-cell")].map((cell) => cell.getBoundingClientRect());
+    return {
+      character: letter.getAttribute("data-letter"),
+      top: Math.min(...boxes.map((box) => box.top)),
+      bottom: Math.max(...boxes.map((box) => box.bottom)),
+      left: Math.min(...boxes.map((box) => box.left)),
+      right: Math.max(...boxes.map((box) => box.right)),
+    };
+  }));
+  expect(glyphs.map(({ character }) => character).join("")).toBe("kathyzhang");
+  expect(glyphs[1].top - glyphs[0].top).toBeGreaterThan(15);
+  expect(glyphs[4].bottom - glyphs[3].bottom).toBeGreaterThan(15);
+  expect(glyphs[9].bottom - glyphs[8].bottom).toBeGreaterThan(15);
+  expect(glyphs[5].left - glyphs[4].right).toBeGreaterThan((glyphs[1].left - glyphs[0].right) * 2);
+  for (const width of [320, 390, 768, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    const dimensions = await page.locator(".pixel-name").evaluate((art) => {
+      const frame = art.getBoundingClientRect();
+      const cells = [...art.querySelectorAll(".pixel-cell, .pixel-echo, .pixel-caret")];
+      return {
+        width: frame.width,
+        height: frame.height,
+        contained: cells.every((cell) => {
+          const bounds = cell.getBoundingClientRect();
+          return bounds.left >= frame.left - 1 && bounds.right <= frame.right + 1
+            && bounds.top >= frame.top - 1 && bounds.bottom <= frame.bottom + 1;
+        }),
+      };
+    });
+    expect(dimensions.width).toBeLessThanOrEqual(880);
+    expect(dimensions.height).toBeLessThan(140);
+    expect(dimensions.height).toBeGreaterThan(40);
+    expect(dimensions.contained).toBe(true);
+  }
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Kathy Zhang");
+});
+
 test("fine lettering has diagonal color detail and dotted extrusion; work art has recognizable logos", async ({ page }) => {
   await page.goto("./");
   const detail = await page.locator(".pixel-name").evaluate((art) => {
