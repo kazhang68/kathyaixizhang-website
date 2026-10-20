@@ -1,43 +1,120 @@
 ---
+import { blockAt, dotsAt } from "../lib/text-art";
+
 interface Props {
-  kind: "server" | "terminal" | "notebook" | "window" | "code";
+  kind: "server" | "terminal" | "notebook" | "window" | "meta";
   compact?: boolean;
 }
 const { kind, compact = false } = Astro.props;
-const artwork = {
+interface Cell { text: string; tone: string; column?: number; }
+const drawings = {
   server: [
-    "    .---------------.    ",
-    "    | [::]  o o o   |    ",
-    "    |---------------|    ",
-    "    | [::]  o o o   |    ",
-    "    |---------------|    ",
-    "    | [::]  o o o   |    ",
-    "    '-------+-------'    ",
-    "       ____|____        ",
-    "      /_________\\       ",
+    "         ______________________       ",
+    "        /_____________________/|      ",
+    "       | .----.    o  o  o    | |      ",
+    "       | |::::|  [========]   | |      ",
+    "       |_'----'______________| |      ",
+    "       | .----.    o  o  o    | |      ",
+    "       | |::::|  [========]   | |      ",
+    "       |_'----'______________| |      ",
+    "       | .----.    o  o  o    | /      ",
+    "       |_|::::|______________|/..     ",
+    "            |  |   |  |       ::      ",
+    "         .--'  '---'  '--.     ..      ",
+    "         | o o o o o o o |             ",
+    "         '---------------'            ",
   ],
   terminal: [
-    "   .-----------------.  ",
-    "   | o o o   terminal|  ",
-    "   |-----------------|  ",
-    "   | >_              |  ",
-    "   |    [code]       |  ",
-    "   |    { ... }      |  ",
-    "   |                 |  ",
-    "   '-----------------'  ",
+    "      .----------------------------.    ",
+    "     / .------------------------. /|    ",
+    "    | |  o o o          ~/code  | | |   ",
+    "    | |------------------------| | |   ",
+    "    | | $ build                | | |   ",
+    "    | |   [################]   | | |   ",
+    "    | |   { ... }              | | |   ",
+    "    | | >_                     | | /   ",
+    "    | '------------------------' |/..  ",
+    "    '-------------+--------------' ::  ",
+    "           .------'-----.           ..  ",
+    "       ____|____________|____           ",
+    "      /____/____/____/____/__/|          ",
+    "      |_____________________|/         ",
   ],
   notebook: [
-    "     .------------.     ",
-    "   --|  # journal |     ",
-    "   --|            |     ",
-    "   --|  > notes   |     ",
-    "   --|  --------  |     ",
-    "   --|  --------  |     ",
-    "   --|  --------  |     ",
-    "     '------------'     ",
+    "          _____________________        ",
+    "         /____________________/|       ",
+    "    o---|  # journal          | |      ",
+    "    o---|                     | |      ",
+    "    o---|  > notes            | |  /\\  ",
+    "    o---|  ---------------    | | / /  ",
+    "    o---|  --------  -----    | |/ /   ",
+    "    o---|  ---------------    | / /    ",
+    "    o---|  -----  --------    |/ /     ",
+    "    o---|                    / /|     ",
+    "    o---|___________________/_/ |     ",
+    "         |____________________|/..    ",
+    "                                ...   ",
   ],
-  window: ["+--+--+", "|  |  |", "+--+--+", "|  |  |", "+--+--+"],
-  code: ["       ", " </>   ", " {;}   ", "       "],
 };
+const compactServer = [
+  "    ________________     ",
+  "   /_______________/|    ",
+  "  | [:::]  o o  == | |    ",
+  "  |________________| |    ",
+  "  | [:::]  o o  == | |    ",
+  "  |________________| |    ",
+  "  | [:::]  o o  == | /    ",
+  "  |________________|/..   ",
+  "     |  |   |  |     ::   ",
+  "   .-'  '---'  '-.        ",
+  "   | o o o o o o |        ",
+  "   '-------------'        ",
+];
+const paneAt = (x: number, y: number) => {
+  const u = (x + y * .3 - 6) / 31;
+  const v = (y - 3 + 2 * Math.sin(u * Math.PI * 2)) / 13;
+  if (u < 0 || u > 1 || v < 0 || v > 1 || Math.abs(u - .5) < .035 || Math.abs(v - .5) < .045) return "";
+  return v < .5 ? u < .5 ? "art-red" : "art-green" : u < .5 ? "art-blue" : "art-gold";
+};
+const loop = Array.from({ length: 180 }, (_, index) => {
+  const t = index / 180 * Math.PI * 2;
+  return { x: 17 + 15 * Math.sin(t), y: 6 + 4.5 * Math.sin(t * 2) };
+});
+const insideLoop = (x: number, y: number) =>
+  loop.some((point) => ((x - point.x) * .6) ** 2 + (y - point.y) ** 2 < .7 ** 2);
+let lines: Cell[][];
+if (kind === "window") {
+  lines = Array.from({ length: 19 }, (_, y) => Array.from({ length: 38 }, (_, x) => {
+    const tones = [paneAt(x + .25, y + .25), paneAt(x + .75, y + .25), paneAt(x + .25, y + .75), paneAt(x + .75, y + .75)];
+    const tone = tones.find(Boolean) || "";
+    return { text: blockAt((sx, sy) => paneAt(sx, sy) === tone && tone !== "", x, y), tone };
+  }));
+} else if (kind === "meta") {
+  lines = Array.from({ length: 13 }, (_, y) => Array.from({ length: 35 }, (_, x) => ({
+    text: dotsAt(insideLoop, x, y),
+    tone: "art-blue",
+  })));
+} else {
+  const drawing = compact && kind === "server" ? compactServer : drawings[kind];
+  lines = drawing.map((line) => [...line].map((text, column) => ({
+    text,
+    tone: kind === "server" && text === "o" ? "art-led"
+      : kind === "notebook" && line.includes("# journal") && column >= 11 && column <= 19 ? "art-accent"
+      : kind === "terminal" && line.includes("$ build") && column >= 8 && column <= 14 ? "art-accent"
+      : text === ":" ? "art-shade" : "",
+  })));
+}
+const columns = Math.max(...lines.map((line) => line.length));
+const raster = kind === "window" || kind === "meta";
+const runs = lines.map((line) => {
+  if (raster) return line.flatMap((cell, column) => cell.text === " " ? [] : [{ ...cell, column }]);
+  const result: Cell[] = [];
+  for (const cell of line) {
+    const previous = result.at(-1);
+    if (previous?.tone === cell.tone) previous.text += cell.text;
+    else result.push({ ...cell });
+  }
+  return result;
+});
 ---
-<pre class:list={["ascii-art", `ascii-${kind}`, { "ascii-compact": compact }]} aria-hidden="true">{(compact && kind === "server" ? [".-----.", "| [::]|", "| o o |", "'-----'"] : artwork[kind]).map((line, index) => <span class={`ascii-line ascii-line-${index % 3}`}>{line}{"\n"}</span>)}</pre>
+<pre class:list={["ascii-art", `ascii-${kind}`, { "ascii-compact": compact }]} style={`--art-columns:${columns}`} aria-hidden="true">{runs.map((line) => <span class:list={["ascii-line", { "ascii-raster-line": raster }]}>{line.map(({ text, tone, column }) => <span class={tone || undefined} style={column === undefined ? undefined : `grid-column:${column + 1}`}>{text}</span>)}{!raster && "\n"}</span>)}</pre>

@@ -47,13 +47,14 @@ Set `draft: true` to keep a post out of the built site (the source is still publ
 
 Site copy uses factual headings and resume-supported details. The About section has no decorative interest badges. Journal topic buttons filter posts; article topics are shown as plain metadata.
 
-The interface uses monospace typography and an ANSI-inspired palette: cyan links and technologies, yellow labels and roles, purple headings, pink actions, green topics, and orange dates. The header is actual block/shade character art; work icons and journal thumbnails use preformatted ASCII drawings. Decorative art is hidden from screen readers, with real text headings and link labels provided separately.
+The interface uses monospace typography with mostly white and gray text. Color is reserved for a few highlighted terms, small navigation/section markers, selected controls, and artwork. The header uses fine block-character lettering, a continuous diagonal rainbow, and offset dotted shadows. Work illustrations include a four-color waving Windows flag, an infinity loop, and a server rack; journal thumbnails use more detailed preformatted drawings. Decorative art is hidden from screen readers, with real text headings and link labels provided separately.
 
 - `src/pages/index.astro`: About, experience, and homepage copy.
 - `src/lib/site.ts`: contact, social, and resume links.
-- `src/components/PixelName.astro`: rainbow block-character artwork, left-to-right code decoding, and the decorative blinking caret. Timing is derived from the character delays so the caret appears only after generation completes.
+- `src/components/PixelName.astro`: letter outlines, diagonal rainbow stops, dotted extrusion, left-to-right code decoding, and the decorative blinking caret. Timing includes both face and shadow generation so the caret appears only after the whole illustration completes.
 - `src/components/AsciiArt.astro`: shared text drawings for work icons and journal thumbnails.
-- `src/styles/global.css`: ANSI palette variables, typography, layout, and reduced-motion rules (static lettering and caret, without the decoding or blink). The banner's per-column rainbow is defined in `PixelName.astro`.
+- `src/lib/text-art.ts`: shared quarter-block and Braille-dot sampling for smooth character-art edges and shadows. All artwork is generated at build time, not drawn with browser JavaScript.
+- `src/styles/global.css`: restrained text accents, typography, layout, and reduced-motion rules (static lettering, shadows, and caret, without the decoding or blink).
 - `src/content/blog/`: Markdown entries.
 
 ## Hosting

@@ -1,34 +1,81 @@
 ---
-const glyphs = [
-  ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
-  ["01110", "11011", "11011", "11111", "11011", "11011", "11011"],
-  ["11111", "00100", "00100", "00100", "00100", "00100", "00100"],
-  ["11011", "11011", "11011", "11111", "11011", "11011", "11011"],
-  ["11011", "11011", "11011", "01110", "00100", "00100", "00100"],
+import { blockAt, dotsAt, insidePolygon, type Point } from "../lib/text-art";
+
+const glyphs: { width: number; outlines: Point[][] }[] = [
+  { width: 23, outlines: [
+    [[0, 0], [5, 0], [5, 14], [0, 14]],
+    [[5, 6], [16, 0], [23, 0], [10, 7]],
+    [[5, 7], [10, 6], [23, 14], [16, 14]],
+  ] },
+  { width: 24, outlines: [
+    [[7, 0], [12, 0], [6, 14], [0, 14]],
+    [[12, 0], [17, 0], [24, 14], [18, 14]],
+    [[8, 0], [16, 0], [18, 3], [6, 3]],
+    [[5, 7], [19, 7], [21, 10], [3, 10]],
+  ] },
+  { width: 24, outlines: [
+    [[0, 0], [24, 0], [24, 3], [15, 3], [15, 14], [9, 14], [9, 3], [0, 3]],
+  ] },
+  { width: 24, outlines: [
+    [[0, 0], [5, 0], [5, 6], [19, 6], [19, 0], [24, 0], [24, 14], [19, 14], [19, 9], [5, 9], [5, 14], [0, 14]],
+  ] },
+  { width: 24, outlines: [
+    [[0, 0], [6, 0], [12, 5], [18, 0], [24, 0], [15, 8], [15, 14], [9, 14], [9, 8]],
+  ] },
 ];
-const decodeDuration = 560;
-const matrix = glyphs.flatMap((glyph, letter) =>
-  glyph.flatMap((row, y) =>
-    [...row].map((value, x) => {
-      const column = letter * 6 + x;
-      return {
-        x: column * 22,
-        y: y * 22,
-        column,
-        active: value === "1",
-        delay: column * 65 + (column * 17 + y * 31) % 120,
-        symbol: ["0", "1", "/", "_", "{", "}"][(column * 7 + y * 13) % 6],
-      };
-    }),
-  ),
-);
-const cells = matrix.filter(({ active }) => active);
-const renderDuration = Math.max(...matrix.map(({ delay }) => delay)) + decodeDuration + 180;
-const colors = ["#00b8ff", "#00d9ff", "#00efad", "#b5ef00", "#ffe600", "#ffb800", "#ff863d", "#e34ee6", "#aa43ff", "#d92aff", "#ff168f"];
-const cellStyle = ({ x, y, delay, column }: typeof matrix[number]) =>
-  `left:${x / 706 * 100}%;top:${y / 195 * 100}%;--delay:${delay}ms;color:${colors[Math.floor(column / 29 * colors.length)]}`;
+let cursor = 4;
+const letters = glyphs.map((glyph) => {
+  const letter = { ...glyph, start: cursor };
+  cursor += glyph.width + 4;
+  return letter;
+});
+const columns = cursor + 4;
+const rows = 19;
+const faceAt = (x: number, y: number) => {
+  const letter = letters.find(({ start, width }) => x >= start && x < start + width);
+  return letter?.outlines.some((outline) => insidePolygon(x - letter.start, y - 1, outline)) ?? false;
+};
+const colors = [
+  [0, 126, 255], [0, 186, 237], [65, 215, 180], [207, 222, 47],
+  [255, 216, 0], [255, 174, 74], [197, 131, 186], [130, 65, 255],
+  [166, 29, 237], [227, 0, 187], [255, 6, 119], [255, 62, 64], [255, 154, 35],
+];
+const colorAt = (x: number, y: number) => {
+  // A vertical offset advances the spectrum too, creating narrow diagonal bands.
+  const band = Math.min(1, (x + y * 2.2) / (columns + rows * .45)) * (colors.length - 1);
+  const start = Math.floor(band);
+  const end = Math.min(start + 1, colors.length - 1);
+  return `rgb(${colors[start].map((channel, i) => Math.round(channel + (colors[end][i] - channel) * (band - start))).join(" ")})`;
+};
+const matrix = Array.from({ length: rows }, (_, y) =>
+  Array.from({ length: columns }, (_, x) => ({
+    x, y,
+    character: blockAt(faceAt, x, y),
+    color: colorAt(x, y),
+    delay: Math.round(x / columns * 1700) + (x * 17 + y * 31) % 90,
+  })),
+).flat();
+const cells = matrix.filter(({ character }) => character !== " ");
+const shadows = matrix.filter(({ character }) => character === " ").flatMap((cell) => {
+  for (let depth = 1; depth <= 3; depth++) {
+    const character = dotsAt((x, y) => faceAt(x + depth, y - depth), cell.x, cell.y);
+    if (character !== " ") return [{ ...cell, character, opacity: depth === 1 ? .65 : .45 }];
+  }
+  return [];
+});
+const noise = matrix.filter(({ x, y }) => (x * 13 + y * 7) % 11 === 0 && y < 16);
+const decodeDuration = 480;
+const shadowDuration = 240;
+const shadowOffset = decodeDuration - 80;
+const renderDuration = Math.max(
+  ...cells.map(({ delay }) => delay + decodeDuration),
+  ...shadows.map(({ delay }) => delay + shadowOffset + shadowDuration),
+  ...noise.map(({ delay }) => delay + decodeDuration),
+) + 120;
+const cellStyle = ({ x, y, delay, color }: typeof matrix[number]) =>
+  `left:${x / columns * 100}%;top:${y / rows * 100}%;--delay:${delay}ms;color:${color}`;
 ---
-<div class="pixel-art" style={`--decode-duration: ${decodeDuration}ms; --render-duration: ${renderDuration}ms`}>
-  <pre class="pixel-name" aria-hidden="true">{cells.map((cell) => <span class="pixel-cell" style={cellStyle(cell)}>{cell.y < 66 ? "██" : cell.y < 110 ? "▓▓" : "▒▒"}</span>)}{cells.filter(({ y }) => y === 132).map((cell) => <span class="pixel-echo" style={cellStyle({ ...cell, y: cell.y + 22 })}>░░</span>)}{matrix.map((cell) => <span class="pixel-noise" style={cellStyle(cell)}>{cell.symbol}</span>)}<span class="pixel-scan"></span><span class="pixel-caret">|</span></pre>
+<div class="pixel-art" style={`--columns:${columns};--rows:${rows};--decode-duration:${decodeDuration}ms;--shadow-duration:${shadowDuration}ms;--shadow-offset:${shadowOffset}ms;--render-duration:${renderDuration}ms`}>
+  <pre class="pixel-name" aria-hidden="true">{shadows.map((cell) => <span class="pixel-echo" style={`${cellStyle(cell)};--shadow-opacity:${cell.opacity}`}>{cell.character}</span>)}{cells.map((cell) => <span class="pixel-cell" style={cellStyle(cell)}>{cell.character}</span>)}{noise.map((cell) => <span class="pixel-noise" style={cellStyle(cell)}>{["0", "1", "/", "_", "{", "}", "<", ">"][(cell.x * 7 + cell.y * 13) % 8]}</span>)}<span class="pixel-scan"></span><span class="pixel-caret">|</span></pre>
   <div class="pixel-caption"><span>Kathy Zhang</span><span>Software Engineer</span></div>
 </div>

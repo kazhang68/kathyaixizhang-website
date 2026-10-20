@@ -53,17 +53,20 @@ test("journal topic controls work and expose their selected state", async ({ pag
   await expect(page.getByRole("button", { name: /All entries/ })).toHaveAttribute("aria-pressed", "true");
 });
 
-for (const width of [360, 390, 768, 1440]) {
+for (const width of [320, 360, 390, 768, 1440]) {
   test(`pages do not overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     for (const route of ["./", "blog/", "blog/hello-world/"]) {
       await page.goto(route);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), route).toBe(true);
+      expect(await page.locator(".ascii-art").evaluateAll((art) => art.every((element) =>
+        element.scrollWidth <= element.clientWidth + 1,
+      )), `${route} character art`).toBe(true);
     }
   });
 }
 
-test("vibrant terminal theme uses real text art and readable accent colors", async ({ page }) => {
+test("terminal theme uses real text art and readable accent colors", async ({ page }) => {
   await page.goto("./");
   expect(await page.locator(".pixel-name").evaluate((art) => art.tagName)).toBe("PRE");
   await expect(page.locator(".pixel-name")).toContainText("██");
@@ -94,9 +97,6 @@ test("vibrant terminal theme uses real text art and readable accent colors", asy
     });
   });
   for (const { name, contrast } of accents) expect(contrast, name).toBeGreaterThanOrEqual(4.5);
-  expect(await page.locator(".site-header .nav-about").evaluate((link) => getComputedStyle(link).color))
-    .not.toBe(await page.locator(".site-header .nav-work").evaluate((link) => getComputedStyle(link).color));
-
   await page.goto("blog/");
   await expect(page.locator(".post-art .ascii-art")).toHaveCount(1);
   expect(await page.locator(".post-art .ascii-art").evaluate((art) => {
@@ -106,11 +106,97 @@ test("vibrant terminal theme uses real text art and readable accent colors", asy
   })).toBe(true);
 });
 
+test("text is predominantly neutral with only selective color highlights", async ({ page }) => {
+  for (const route of ["./", "blog/", "blog/hello-world/"]) {
+    await page.goto(route);
+    const neutralFraction = await page.evaluate(() => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let total = 0;
+      let neutral = 0;
+      while (walker.nextNode()) {
+        const element = walker.currentNode.parentElement;
+        const text = walker.currentNode.textContent?.trim() || "";
+        if (!element || !text || element.closest('pre, [aria-hidden="true"], .sr-only, .skip-link, script, style') || !element.getClientRects().length) continue;
+        const channels = getComputedStyle(element).color.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+        total += text.length;
+        if (Math.max(...channels) - Math.min(...channels) <= 20) neutral += text.length;
+      }
+      return neutral / total;
+    });
+    expect(neutralFraction, route).toBeGreaterThan(.9);
+    const headingColors = await page.locator("h2, .hero-heading, .work-detail h3, .profile-card dd, .post-card h3, .article-header h1").evaluateAll((headings) =>
+      headings.map((heading) => getComputedStyle(heading).color),
+    );
+    for (const color of headingColors) expect(color).toBe("rgb(230, 230, 239)");
+  }
+});
+
+test("fine lettering has diagonal color detail and dotted extrusion; work art has recognizable logos", async ({ page }) => {
+  await page.goto("./");
+  const detail = await page.locator(".pixel-name").evaluate((art) => {
+    const faces = [...art.querySelectorAll<HTMLElement>(".pixel-cell")];
+    const shadows = [...art.querySelectorAll(".pixel-echo")];
+    const column = faces.filter((cell) => cell.style.left === faces[0].style.left);
+    return {
+      cells: faces.length,
+      rows: new Set(faces.map((cell) => cell.style.top)).size,
+      colors: new Set(faces.map((cell) => cell.style.color)).size,
+      verticalColors: new Set(column.map((cell) => cell.style.color)).size,
+      edges: faces.some((cell) => /[▘▝▖▗▙▚▛▜▞▟]/.test(cell.textContent || "")),
+      shadows: shadows.length,
+      dots: shadows.every((cell) => /^[\u2801-\u28ff]$/.test(cell.textContent || "")),
+    };
+  });
+  expect(detail.cells).toBeGreaterThan(600);
+  expect(detail.rows).toBeGreaterThanOrEqual(14);
+  expect(detail.colors).toBeGreaterThan(200);
+  expect(detail.verticalColors).toBeGreaterThan(8);
+  expect(detail.edges).toBe(true);
+  expect(detail.shadows).toBeGreaterThan(100);
+  expect(detail.dots).toBe(true);
+  for (const pane of ["red", "green", "blue", "gold"]) {
+    await expect(page.locator(`.ascii-window .art-${pane}`).first()).toBeAttached();
+  }
+  await expect(page.locator(".ascii-window .ascii-line")).toHaveCount(19);
+  await expect(page.locator(".ascii-meta .ascii-line")).toHaveCount(13);
+  expect(await page.locator(".ascii-window .ascii-line").evaluateAll((lines) =>
+    new Set(lines.map((line) => (line.firstElementChild as HTMLElement | null)?.style.gridColumn).filter(Boolean)).size,
+  )).toBeGreaterThan(4);
+  expect(await page.locator(".ascii-compact").evaluateAll((art) =>
+    art.every((element) => element.getBoundingClientRect().width >= 80),
+  )).toBe(true);
+});
+
+test("system-font fallback keeps character artwork aligned and within its frames", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("https://fonts.googleapis.com/**", (route) => route.abort());
+  await page.goto("./");
+  await page.evaluate(() => document.documentElement.style.setProperty("--mono", "Consolas, monospace"));
+  for (const width of [320, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.locator(".ascii-art").evaluateAll((art) => art.every((element) =>
+      element.scrollWidth <= element.clientWidth + 1,
+    ))).toBe(true);
+    expect(await page.locator(".ascii-raster-line > span").evaluateAll((cells) => cells.every((cell) =>
+      Math.abs(cell.getBoundingClientRect().width - parseFloat(getComputedStyle(cell).fontSize) * .6) < .1,
+    ))).toBe(true);
+    expect(await page.locator(".pixel-name").evaluate((art) => {
+      const frame = art.getBoundingClientRect();
+      return [...art.querySelectorAll(".pixel-cell, .pixel-echo, .pixel-caret")].every((cell) => {
+        const bounds = cell.getBoundingClientRect();
+        return bounds.left >= frame.left - 1 && bounds.right <= frame.right + 1;
+      });
+    })).toBe(true);
+  }
+});
+
 test("reduced motion shows fully visible static text lettering", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
   expect(await page.locator(".pixel-cell").evaluateAll((cells) => cells.every((cell) => getComputedStyle(cell).opacity === "1"))).toBe(true);
   expect(await page.locator(".pixel-caret").evaluate((caret) => getComputedStyle(caret).opacity)).toBe("1");
+  expect(await page.locator(".pixel-echo").evaluateAll((cells) => cells.every((cell) => Number(getComputedStyle(cell).opacity) > 0))).toBe(true);
   expect(await page.locator(".pixel-noise, .pixel-scan").evaluateAll((effects) => effects.every((effect) => getComputedStyle(effect).opacity === "0"))).toBe(true);
   expect(await page.locator(".pixel-name").evaluate((art) => art.getAnimations({ subtree: true }).length)).toBe(0);
 });
@@ -126,6 +212,7 @@ test("name decodes left to right, then a decorative caret blinks", async ({ page
     const opacity = (selector: string) => [...art.querySelectorAll(selector)].map((element) => Number(getComputedStyle(element).opacity));
     return {
       pixels: opacity(".pixel-cell"),
+      shadows: opacity(".pixel-echo"),
       noise: opacity(".pixel-noise"),
       scan: opacity(".pixel-scan")[0],
       caret: opacity(".pixel-caret")[0],
@@ -145,6 +232,7 @@ test("name decodes left to right, then a decorative caret blinks", async ({ page
 
   const complete = await frame(duration + 10);
   expect(complete.pixels.every((value) => value === 1)).toBe(true);
+  expect(complete.shadows.every((value) => value >= .45)).toBe(true);
   expect(complete.noise.every((value) => value === 0)).toBe(true);
   expect(complete.scan).toBe(0);
   expect(complete.caret).toBe(1);
