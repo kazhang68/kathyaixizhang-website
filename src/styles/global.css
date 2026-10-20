@@ -76,6 +76,11 @@ h1, h2, h3, p { margin-top: 0; }
 .hero-description { max-width: 430px; color: var(--muted); font-size: 14px; line-height: 1.8; margin-bottom: 26px; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 26px; }
 .hero-actions > a { white-space: nowrap; }
+.command-link { --command-accent: var(--cyan); display: inline-flex; align-items: baseline; gap: 8px; padding: 3px 0; color: var(--text); font: 500 13px/1.6 var(--mono); }
+.command-link-work { --command-accent: var(--yellow); }
+.command-link > span { color: var(--command-accent); }
+.command-link:hover, .command-link:focus-visible { text-decoration: underline; text-decoration-color: var(--command-accent); text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.command-link:focus-visible { outline: none; }
 .button { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 25px; border-radius: 0; border: 1px solid var(--line); font: 500 11px var(--mono); padding: 13px 17px; transition: background .2s, transform .2s; }
 .button:hover { transform: translateY(-2px); }
 .button-light { background: #ff42bd08; color: var(--pink); border-color: var(--pink); }

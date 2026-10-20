@@ -39,12 +39,6 @@ test("resume is a prominent Work action, not a hero action, and exports only the
   expect(url.searchParams.get("tab")).toBe("t.0");
   await expect(workResume).toHaveAttribute("target", "_blank");
   await expect(workResume).toHaveAttribute("rel", "noopener noreferrer");
-  const viewExperience = page.locator(".hero-actions").getByRole("link", { name: "View experience" });
-  await expect(page.locator(".hero-actions").getByRole("link")).toHaveCount(1);
-  await expect(viewExperience).toHaveAttribute("href", "#work");
-  await expect(viewExperience).toHaveClass("text-link");
-  await expect(viewExperience).toHaveCSS("border-width", "0px");
-  await expect(viewExperience).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await workResume.scrollIntoViewIfNeeded();
@@ -63,6 +57,49 @@ test("resume is a prominent Work action, not a hero action, and exports only the
     expect(dimensions.contained, `Work heading at ${width}px`).toBe(true);
     expect(dimensions.visible, `prominent resume at ${width}px`).toBe(true);
   }
+});
+
+test("hero commands are unboxed and their prompts match the destination headings", async ({ page }) => {
+  await page.goto("./");
+  const actions = page.locator(".hero-actions");
+  const experience = actions.getByRole("link", { name: "View experience", exact: true });
+  const about = actions.getByRole("link", { name: "About", exact: true });
+  await expect(actions.getByRole("link")).toHaveCount(2);
+  for (const { link, label, destination, heading } of [
+    { link: experience, label: ">experience", destination: "#work", heading: "#work-title" },
+    { link: about, label: ">about", destination: "#about", heading: "#about-title" },
+  ]) {
+    const accent = await page.locator(heading).evaluate((element) => getComputedStyle(element).color);
+    await expect(link).toHaveText(label);
+    await expect(link).toHaveAttribute("href", destination);
+    await expect(link).toHaveCSS("color", "rgb(230, 230, 239)");
+    await expect(link).toHaveCSS("border-width", "0px");
+    await expect(link).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(link.locator("span")).toHaveText(">");
+    await expect(link.locator("span")).toHaveAttribute("aria-hidden", "true");
+    await expect(link.locator("span")).toHaveCSS("color", accent);
+    await link.hover();
+    await expect(link).toHaveCSS("text-decoration-line", "underline");
+    await expect(link).toHaveCSS("text-decoration-color", accent);
+  }
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await actions.getByRole("link").evaluateAll((links) => links.every((link) => {
+      const bounds = link.getBoundingClientRect();
+      return bounds.left >= 0 && bounds.right <= innerWidth;
+    })), `command links at ${width}px`).toBe(true);
+  }
+  await experience.click();
+  await expect(page).toHaveURL(/#work$/);
+  await expect(page.locator("#work-title")).toBeInViewport();
+  await page.goto("./");
+  await experience.focus();
+  await page.keyboard.press("Tab");
+  await expect(about).toBeFocused();
+  await expect(about).toHaveCSS("text-decoration-line", "underline");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#about$/);
+  await expect(page.locator("#about-title")).toBeInViewport();
 });
 
 test("copy is factual and the decorative interest labels are removed", async ({ page }) => {
