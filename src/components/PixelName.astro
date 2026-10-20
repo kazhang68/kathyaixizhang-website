@@ -14,6 +14,7 @@ const matrix = glyphs.flatMap((glyph, letter) =>
       return {
         x: column * 22,
         y: y * 22,
+        column,
         active: value === "1",
         delay: column * 65 + (column * 17 + y * 31) % 120,
         symbol: ["0", "1", "/", "_", "{", "}"][(column * 7 + y * 13) % 6],
@@ -23,25 +24,11 @@ const matrix = glyphs.flatMap((glyph, letter) =>
 );
 const cells = matrix.filter(({ active }) => active);
 const renderDuration = Math.max(...matrix.map(({ delay }) => delay)) + decodeDuration + 180;
+const colors = ["#00b8ff", "#00d9ff", "#00efad", "#b5ef00", "#ffe600", "#ffb800", "#ff863d", "#e34ee6", "#aa43ff", "#d92aff", "#ff168f"];
+const cellStyle = ({ x, y, delay, column }: typeof matrix[number]) =>
+  `left:${x / 706 * 100}%;top:${y / 195 * 100}%;--delay:${delay}ms;color:${colors[Math.floor(column / 29 * colors.length)]}`;
 ---
 <div class="pixel-art" style={`--decode-duration: ${decodeDuration}ms; --render-duration: ${renderDuration}ms`}>
-  <svg class="pixel-name" viewBox="-2 -5 706 195" fill="none" aria-hidden="true">
-    <defs>
-      <linearGradient id="name-rainbow" x1="0" y1="0" x2="690" y2="90" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#46c9eb" /><stop offset=".22" stop-color="#a0da74" /><stop offset=".39" stop-color="#ffcf4a" /><stop offset=".57" stop-color="#ff9c77" /><stop offset=".75" stop-color="#ad78ff" /><stop offset="1" stop-color="#f34aa1" />
-      </linearGradient>
-      <pattern id="dither" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="#0d0e10" /></pattern>
-    </defs>
-    <g fill="url(#name-rainbow)">
-      {cells.map(({ x, y, delay }) => <rect class="pixel-cell" x={x} y={y} width="22.25" height="22.25" style={`--delay: ${delay}ms`} />)}
-      {cells.filter(({ y }) => y >= 110).map(({ x, y, delay }) => <rect class="pixel-echo" x={x - 7} y={y + 22} width="22.25" height="24" opacity=".36" style={`--delay: ${delay}ms`} />)}
-    </g>
-    <path d="M0 88H643V176H0Z" fill="url(#dither)" opacity=".85" />
-    <g class="pixel-code">
-      {matrix.map(({ x, y, delay, symbol }) => <text class="pixel-noise" x={x + 11} y={y + 16} text-anchor="middle" style={`--delay: ${delay}ms`}>{symbol}</text>)}
-    </g>
-    <rect class="pixel-scan" x="0" y="-2" width="2" height="166" />
-    <rect class="pixel-caret" x="665" y="0" width="8" height="154" />
-  </svg>
+  <pre class="pixel-name" aria-hidden="true">{cells.map((cell) => <span class="pixel-cell" style={cellStyle(cell)}>{cell.y < 66 ? "██" : cell.y < 110 ? "▓▓" : "▒▒"}</span>)}{cells.filter(({ y }) => y === 132).map((cell) => <span class="pixel-echo" style={cellStyle({ ...cell, y: cell.y + 22 })}>░░</span>)}{matrix.map((cell) => <span class="pixel-noise" style={cellStyle(cell)}>{cell.symbol}</span>)}<span class="pixel-scan"></span><span class="pixel-caret">|</span></pre>
   <div class="pixel-caption"><span>Kathy Zhang</span><span>Software Engineer</span></div>
 </div>

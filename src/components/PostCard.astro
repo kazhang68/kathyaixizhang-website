@@ -1,14 +1,15 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import { formatDate, pathTo } from "../lib/site";
+import AsciiArt from "./AsciiArt.astro";
 interface Props { post: CollectionEntry<"blog">; index?: number; }
 const { post, index = 0 } = Astro.props;
 ---
 <a class="post-card" href={pathTo(`blog/${post.id}/`)}>
   <div class:list={["post-art", `post-art-${index % 3}`]} aria-hidden="true">
-    {index % 3 === 0 ? <><span class="art-orbit orbit-one"></span><span class="art-orbit orbit-two"></span><span class="art-orbit orbit-three"></span><span class="art-spark">+</span></> : index % 3 === 1 ? <span class="art-terminal">&gt;<span class="cursor">_</span></span> : <><span class="art-stack stack-one"></span><span class="art-stack stack-two"></span><span class="art-stack stack-three"></span></>}
+    <AsciiArt kind={index % 3 === 0 ? "notebook" : index % 3 === 1 ? "terminal" : "server"} />
     <span class="art-file">~/journal/{String(index + 1).padStart(2, "0")}</span>
-    <span class="art-arrow">&#8599;</span>
+    <span class="art-arrow">[open]</span>
   </div>
   <div class="post-meta"><span>{post.data.tags[0] || "Notes"}</span><time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time></div>
   <h3>{post.data.title} <span aria-hidden="true">&#8599;</span></h3>

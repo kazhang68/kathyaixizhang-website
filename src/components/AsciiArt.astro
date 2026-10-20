@@ -1,0 +1,43 @@
+---
+interface Props {
+  kind: "server" | "terminal" | "notebook" | "window" | "code";
+  compact?: boolean;
+}
+const { kind, compact = false } = Astro.props;
+const artwork = {
+  server: [
+    "    .---------------.    ",
+    "    | [::]  o o o   |    ",
+    "    |---------------|    ",
+    "    | [::]  o o o   |    ",
+    "    |---------------|    ",
+    "    | [::]  o o o   |    ",
+    "    '-------+-------'    ",
+    "       ____|____        ",
+    "      /_________\\       ",
+  ],
+  terminal: [
+    "   .-----------------.  ",
+    "   | o o o   terminal|  ",
+    "   |-----------------|  ",
+    "   | >_              |  ",
+    "   |    [code]       |  ",
+    "   |    { ... }      |  ",
+    "   |                 |  ",
+    "   '-----------------'  ",
+  ],
+  notebook: [
+    "     .------------.     ",
+    "   --|  # journal |     ",
+    "   --|            |     ",
+    "   --|  > notes   |     ",
+    "   --|  --------  |     ",
+    "   --|  --------  |     ",
+    "   --|  --------  |     ",
+    "     '------------'     ",
+  ],
+  window: ["+--+--+", "|  |  |", "+--+--+", "|  |  |", "+--+--+"],
+  code: ["       ", " </>   ", " {;}   ", "       "],
+};
+---
+<pre class:list={["ascii-art", `ascii-${kind}`, { "ascii-compact": compact }]} aria-hidden="true">{(compact && kind === "server" ? [".-----.", "| [::]|", "| o o |", "'-----'"] : artwork[kind]).map((line, index) => <span class={`ascii-line ascii-line-${index % 3}`}>{line}{"\n"}</span>)}</pre>

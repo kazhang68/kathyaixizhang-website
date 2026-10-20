@@ -1,6 +1,6 @@
 # Kathy Zhang / Personal website
 
-A dark, terminal-inspired personal site with an animated rainbow pixel header, resume-based experience, an About section, and a Markdown journal. Built with Astro and deployed as a static site on GitHub Pages. No backend, tracking, or tokens in the browser.
+A dark, terminal-inspired personal site with a vivid rainbow text-art header, resume-based experience, an About section, and a Markdown journal. Built with Astro and deployed as a static site on GitHub Pages. No backend, tracking, or tokens in the browser.
 
 ## Local development
 
@@ -47,10 +47,13 @@ Set `draft: true` to keep a post out of the built site (the source is still publ
 
 Site copy uses factual headings and resume-supported details. The About section has no decorative interest badges. Journal topic buttons filter posts; article topics are shown as plain metadata.
 
+The interface uses monospace typography and an ANSI-inspired palette: cyan links and technologies, yellow labels and roles, purple headings, pink actions, green topics, and orange dates. The header is actual block/shade character art; work icons and journal thumbnails use preformatted ASCII drawings. Decorative art is hidden from screen readers, with real text headings and link labels provided separately.
+
 - `src/pages/index.astro`: About, experience, and homepage copy.
 - `src/lib/site.ts`: contact, social, and resume links.
-- `src/components/PixelName.astro`: rainbow pixel artwork, left-to-right code decoding, and the decorative blinking caret. Timing is derived from the pixel delays so the caret appears only after generation completes.
-- `src/styles/global.css`: colors, typography, layout, and reduced-motion rules (static lettering and caret, without the decoding or blink).
+- `src/components/PixelName.astro`: rainbow block-character artwork, left-to-right code decoding, and the decorative blinking caret. Timing is derived from the character delays so the caret appears only after generation completes.
+- `src/components/AsciiArt.astro`: shared text drawings for work icons and journal thumbnails.
+- `src/styles/global.css`: ANSI palette variables, typography, layout, and reduced-motion rules (static lettering and caret, without the decoding or blink). The banner's per-column rainbow is defined in `PixelName.astro`.
 - `src/content/blog/`: Markdown entries.
 
 ## Hosting

@@ -63,24 +63,67 @@ for (const width of [360, 390, 768, 1440]) {
   });
 }
 
-test("reduced motion shows fully visible static pixel lettering", async ({ page }) => {
+test("vibrant terminal theme uses real text art and readable accent colors", async ({ page }) => {
+  await page.goto("./");
+  expect(await page.locator(".pixel-name").evaluate((art) => art.tagName)).toBe("PRE");
+  await expect(page.locator(".pixel-name")).toContainText("██");
+  await expect(page.locator(".pixel-name svg, .company-icon, .art-orbit, .art-stack")).toHaveCount(0);
+  await expect(page.locator(".work-company .ascii-art")).toHaveCount(3);
+  await expect(page.locator(".post-art .ascii-art")).toHaveCount(1);
+  expect(await page.locator(".ascii-art").evaluateAll((art) =>
+    art.every((element) => element.tagName === "PRE" && element.getAttribute("aria-hidden") === "true"),
+  )).toBe(true);
+  expect(await page.locator("body").evaluate((body) => getComputedStyle(body).fontFamily)).toContain("Mono");
+  const accents = await page.evaluate(() => {
+    const style = getComputedStyle(document.documentElement);
+    const luminance = (hex: string) => {
+      const channels = hex.trim().slice(1).match(/../g)!.map((channel) => {
+        const value = parseInt(channel, 16) / 255;
+        return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
+      });
+      return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+    };
+    return ["cyan", "green", "yellow", "purple", "pink", "orange"].map((name) => {
+      const hex = style.getPropertyValue(`--${name}`);
+      return {
+        name,
+        contrast: Math.min(...["bg", "panel"].map((background) =>
+          (luminance(hex) + .05) / (luminance(style.getPropertyValue(`--${background}`)) + .05),
+        )),
+      };
+    });
+  });
+  for (const { name, contrast } of accents) expect(contrast, name).toBeGreaterThanOrEqual(4.5);
+  expect(await page.locator(".site-header .nav-about").evaluate((link) => getComputedStyle(link).color))
+    .not.toBe(await page.locator(".site-header .nav-work").evaluate((link) => getComputedStyle(link).color));
+
+  await page.goto("blog/");
+  await expect(page.locator(".post-art .ascii-art")).toHaveCount(1);
+  expect(await page.locator(".post-art .ascii-art").evaluate((art) => {
+    const drawing = art.getBoundingClientRect();
+    const frame = art.parentElement!.getBoundingClientRect();
+    return drawing.left >= frame.left && drawing.right <= frame.right;
+  })).toBe(true);
+});
+
+test("reduced motion shows fully visible static text lettering", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
   expect(await page.locator(".pixel-cell").evaluateAll((cells) => cells.every((cell) => getComputedStyle(cell).opacity === "1"))).toBe(true);
   expect(await page.locator(".pixel-caret").evaluate((caret) => getComputedStyle(caret).opacity)).toBe("1");
   expect(await page.locator(".pixel-noise, .pixel-scan").evaluateAll((effects) => effects.every((effect) => getComputedStyle(effect).opacity === "0"))).toBe(true);
-  expect(await page.locator(".pixel-name").evaluate((svg) => svg.getAnimations({ subtree: true }).length)).toBe(0);
+  expect(await page.locator(".pixel-name").evaluate((art) => art.getAnimations({ subtree: true }).length)).toBe(0);
 });
 
 test("name decodes left to right, then a decorative caret blinks", async ({ page }) => {
   await page.goto("./");
   const duration = await page.locator(".pixel-art").evaluate((art) => parseFloat(getComputedStyle(art).getPropertyValue("--render-duration")));
-  const frame = async (time: number) => page.locator(".pixel-name").evaluate((svg, currentTime) => {
-    for (const animation of svg.getAnimations({ subtree: true })) {
+  const frame = async (time: number) => page.locator(".pixel-name").evaluate((art, currentTime) => {
+    for (const animation of art.getAnimations({ subtree: true })) {
       animation.pause();
       animation.currentTime = currentTime;
     }
-    const opacity = (selector: string) => [...svg.querySelectorAll(selector)].map((element) => Number(getComputedStyle(element).opacity));
+    const opacity = (selector: string) => [...art.querySelectorAll(selector)].map((element) => Number(getComputedStyle(element).opacity));
     return {
       pixels: opacity(".pixel-cell"),
       noise: opacity(".pixel-noise"),
