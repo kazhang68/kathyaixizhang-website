@@ -24,6 +24,37 @@ test("homepage, navigation, post, and all local links resolve without script err
   expect(errors).toEqual([]);
 });
 
+test("resume is the primary hero action and every resume link exports only the first tab", async ({ page }) => {
+  await page.goto("./");
+  const heroResume = page.locator(".hero-actions").getByRole("link", { name: "Full resume (PDF)", exact: true });
+  const resumeLinks = page.getByRole("link", { name: "Full resume (PDF)", exact: true });
+  await expect(resumeLinks).toHaveCount(2);
+  await expect(page.locator(".hero-actions > a").first()).toHaveText("Full resume (PDF) ↗");
+  await expect(heroResume).toHaveClass("button button-resume");
+  await expect(heroResume).toHaveCSS("background-color", "rgb(255, 66, 189)");
+  await expect(heroResume).toHaveCSS("color", "rgb(11, 11, 14)");
+  const hrefs = await resumeLinks.evaluateAll((links) => links.map((link) => link.getAttribute("href")!));
+  expect(new Set(hrefs).size).toBe(1);
+  for (const href of hrefs) {
+    const url = new URL(href);
+    expect(url.origin).toBe("https://docs.google.com");
+    expect(url.pathname).toBe("/document/d/1ahuyYG2i4bqLGUcgCTlEXR-dkEWrEo-YUtIplRq7wuQ/export");
+    expect(url.searchParams.get("format")).toBe("pdf");
+    expect(url.searchParams.get("tab")).toBe("t.0");
+  }
+  await expect(heroResume).toHaveAttribute("target", "_blank");
+  await expect(heroResume).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(page.locator(".hero-actions").getByRole("link", { name: "View experience" })).toHaveAttribute("href", "#work");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await heroResume.evaluate((link) => {
+      const bounds = link.getBoundingClientRect();
+      return bounds.left >= 0 && bounds.right <= innerWidth && bounds.top >= 0 && bounds.bottom <= innerHeight;
+    }), `prominent resume at ${width}px`).toBe(true);
+    expect(await page.locator(".hero-actions").evaluate((actions) => actions.scrollWidth <= actions.clientWidth)).toBe(true);
+  }
+});
+
 test("copy is factual and the decorative interest labels are removed", async ({ page }) => {
   const filler = /hello,?\s*world|curious human|curiosity|rabbit hole|human behind the keyboard|not just my readme|equal parts|work in progress|just like me|building & breaking things|lifelong learning|side quest|figuring things out|learning by building|always evolving|good things start|a growing collection|think out loud/i;
   for (const route of ["./", "blog/", "blog/hello-world/", "404.html"]) {

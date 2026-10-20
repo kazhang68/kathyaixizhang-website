@@ -4,7 +4,7 @@ export const site = {
   email: "kazhang68@gmail.com",
   github: "https://github.com/kazhang68",
   linkedin: "https://www.linkedin.com/in/kathyzhang-111/",
-  resume: "https://docs.google.com/document/d/1ahuyYG2i4bqLGUcgCTlEXR-dkEWrEo-YUtIplRq7wuQ/export?format=pdf",
+  resume: "https://docs.google.com/document/d/1ahuyYG2i4bqLGUcgCTlEXR-dkEWrEo-YUtIplRq7wuQ/export?format=pdf&tab=t.0",
 };
 
 export function pathTo(path = "") {

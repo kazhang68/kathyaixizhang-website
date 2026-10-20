@@ -74,11 +74,13 @@ h1, h2, h3, p { margin-top: 0; }
 .hero-bottom { padding-top: 47px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 90px; align-items: center; }
 .hero-heading { font-size: clamp(24px, 2.5vw, 34px); font-weight: 500; line-height: 1.5; letter-spacing: -1px; margin-bottom: 20px; }
 .hero-description { max-width: 430px; color: var(--muted); font-size: 14px; line-height: 1.8; margin-bottom: 26px; }
-.hero-actions { display: flex; align-items: center; gap: 26px; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 26px; }
+.hero-actions > a { white-space: nowrap; }
 .button { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 25px; border-radius: 0; border: 1px solid var(--line); font: 500 11px var(--mono); padding: 13px 17px; transition: background .2s, transform .2s; }
 .button:hover { transform: translateY(-2px); }
 .button-light { background: #ff42bd08; color: var(--pink); border-color: var(--pink); }
 .button-light:hover { background: #ff42bd18; }
+.button-resume { min-height: 46px; background: var(--pink); color: var(--bg); border-color: var(--pink); font-size: 12px; font-weight: 600; }
 .text-link { display: inline-flex; align-items: center; gap: 13px; font: 11px var(--mono); transition: color .2s; }
 .text-link span { color: var(--cyan); }
 .text-link:hover { color: var(--mint); }

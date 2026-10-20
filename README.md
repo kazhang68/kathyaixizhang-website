@@ -65,4 +65,6 @@ Work illustrations include a four-color waving Windows flag, an infinity loop, a
 
 `.github/workflows/deploy.yml` checks, builds, and deploys each push to `main`. In repository **Settings > Pages**, set **Source** to **GitHub Actions**. The site URL is `https://kazhang68.github.io/kathyaixizhang-website/`.
 
-For a custom domain or different repository name, update `site` and `base` in `astro.config.mjs`. All internal links use the shared base-path helper. The resume download points to the original Google document; it must remain publicly accessible. Google Fonts are optional network-loaded enhancements; system fonts are the fallback.
+For a custom domain or different repository name, update `site` and `base` in `astro.config.mjs`. All internal links use the shared base-path helper. Google Fonts are optional network-loaded enhancements; system fonts are the fallback.
+
+The primary **Full resume (PDF)** button near the top of the homepage and the secondary Work link share `site.resume` in `src/lib/site.ts`. The URL exports only the Google document's first tab, named `original` (`tab=t.0`), as a PDF. Keep that tab ID in the URL: omitting it exports all resume versions together. Edits to the original tab are reflected in future downloads without rebuilding the site; the Google document must remain publicly accessible.
