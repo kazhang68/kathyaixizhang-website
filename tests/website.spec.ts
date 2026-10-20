@@ -39,8 +39,12 @@ test("resume is a prominent Work action, not a hero action, and exports only the
   expect(url.searchParams.get("tab")).toBe("t.0");
   await expect(workResume).toHaveAttribute("target", "_blank");
   await expect(workResume).toHaveAttribute("rel", "noopener noreferrer");
-  await expect(page.locator(".hero-actions").getByRole("link", { name: "View experience" })).toHaveAttribute("href", "#work");
-  await expect(page.locator(".hero-actions").getByRole("link", { name: "About" })).toHaveAttribute("href", "#about");
+  const viewExperience = page.locator(".hero-actions").getByRole("link", { name: "View experience" });
+  await expect(page.locator(".hero-actions").getByRole("link")).toHaveCount(1);
+  await expect(viewExperience).toHaveAttribute("href", "#work");
+  await expect(viewExperience).toHaveClass("text-link");
+  await expect(viewExperience).toHaveCSS("border-width", "0px");
+  await expect(viewExperience).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await workResume.scrollIntoViewIfNeeded();
