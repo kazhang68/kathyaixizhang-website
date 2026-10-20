@@ -330,7 +330,7 @@ test("the public writing route and authoring controls are gone", async ({ page, 
 test("static content remains usable without JavaScript", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto("http://localhost:4321/kathyaixizhang-website/");
+  await page.goto("http://localhost:4321/");
   await expect(page.locator("#about")).toBeVisible();
   await page.getByRole("navigation").getByRole("link", { name: "Journal" }).click();
   await page.locator(".post-card").click();
