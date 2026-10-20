@@ -15,9 +15,9 @@ const words = post.body?.split(/\s+/).length || 0;
 <Layout title={post.data.title} description={post.data.description} active="post">
   <article class="article-page">
     <a class="text-link back-link" href={pathTo("blog/")}>&#8592; Back to the journal</a>
-    <header class="article-header"><div class="post-meta"><time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time><span>{Math.max(1, Math.ceil(words / 200))} min read</span></div><h1>{post.data.title}</h1><p>{post.data.description}</p><div class="interest-tags">{post.data.tags.map((tag) => <span>{tag}</span>)}</div></header>
+    <header class="article-header"><div class="post-meta"><time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time><span>{Math.max(1, Math.ceil(words / 200))} min read</span></div><h1>{post.data.title}</h1><p>{post.data.description}</p>{post.data.tags.length > 0 && <p class="post-topics">Topics: {post.data.tags.join(", ")}</p>}</header>
     <div class="rainbow-rule"></div>
     <div class="prose"><Content /></div>
-    <div class="article-end"><span class="mint">&gt;_</span><p>Thanks for stopping by.<br /><span class="muted">More notes as I go.</span></p><a class="text-link" href={pathTo("blog/")}>More from the journal &#8594;</a></div>
+    <div class="article-end"><a class="text-link" href={pathTo("blog/")}>All journal entries &#8594;</a></div>
   </article>
 </Layout>

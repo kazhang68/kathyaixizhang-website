@@ -41,9 +41,11 @@ Your **Markdown** goes here.
 
 Choose **Commit changes** to save to `main`. Only repository collaborators with write access can publish directly; GitHub Actions rebuilds and deploys the site after the commit. You can also edit or add Markdown files in a local checkout and push them to GitHub.
 
-Set `draft: true` to keep a post out of the built site (the source is still public in this repository). Published posts are ordered by date; future dates are labels, not scheduled publication. The initial welcome entry is starter copy and can be edited or removed. Don't include private information in posts: this repository is public.
+Set `draft: true` to keep a post out of the built site (the source is still public in this repository). Published posts are ordered by date; future dates are labels, not scheduled publication. The introductory entry, "About this website," is starter copy and can be edited or removed. Don't include private information in posts: this repository is public.
 
 ## Personalizing
+
+Site copy uses factual headings and resume-supported details. The About section has no decorative interest badges. Journal topic buttons filter posts; article topics are shown as plain metadata.
 
 - `src/pages/index.astro`: About, experience, and homepage copy.
 - `src/lib/site.ts`: contact, social, and resume links.

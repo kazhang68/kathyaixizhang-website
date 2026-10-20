@@ -6,11 +6,11 @@ const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort((a, 
 const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
 ---
 <Layout title="Journal" active="blog">
-  <section class="page-intro"><div class="section-label"><span class="mint">~/</span> JOURNAL</div><h1>Notes from the<br /><span class="rainbow-text">rabbit hole.</span></h1><p>Things I'm building, things I'm learning, and thoughts along the way.<br />Part engineering notebook. Part personal corner.</p></section>
+  <section class="page-intro"><div class="section-label"><span class="mint">~/</span> POSTS</div><h1>Journal</h1><p>Technical notes, project updates, and personal posts.</p></section>
   <section class="blog-list" aria-label="Journal entries">
-    <div class="blog-toolbar"><div class="filter-list" role="group" aria-label="Filter posts by topic"><button class="filter-button selected" data-filter="all" aria-pressed="true">All entries <span>{posts.length}</span></button>{tags.map((tag) => <button class="filter-button" data-filter={tag} aria-pressed="false">{tag}</button>)}</div><span class="muted small">a growing collection</span></div>
+    <div class="blog-toolbar"><div class="filter-list" role="group" aria-label="Filter posts by topic"><button class="filter-button selected" data-filter="all" aria-pressed="true">All entries <span>{posts.length}</span></button>{tags.map((tag) => <button class="filter-button" data-filter={tag} aria-pressed="false">{tag}</button>)}</div></div>
     <div class:list={["posts-grid", { "single-post": posts.length === 1 }]}>{posts.map((post, index) => <div class="filter-post" data-tags={JSON.stringify(post.data.tags)}><PostCard post={post} index={index} /></div>)}</div>
-    {!posts.length && <p class="empty-state">A blank page, for now. More soon.</p>}
+    {!posts.length && <p class="empty-state">No posts published yet.</p>}
   </section>
 </Layout>
 <script>

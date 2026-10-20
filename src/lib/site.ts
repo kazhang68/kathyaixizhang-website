@@ -1,6 +1,6 @@
 export const site = {
   name: "Kathy Zhang",
-  description: "Software engineer, systems tinkerer, and endlessly curious human. A little corner of the internet for things I build and things I learn.",
+  description: "Kathy Zhang is a Software Engineer II at Microsoft and a Cornell computer science graduate. Experience, projects, and technical writing.",
   email: "kazhang68@gmail.com",
   github: "https://github.com/kazhang68",
   linkedin: "https://www.linkedin.com/in/kathyzhang-111/",

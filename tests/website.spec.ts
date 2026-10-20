@@ -16,12 +16,32 @@ test("homepage, navigation, post, and all local links resolve without script err
     expect(response.ok(), link).toBe(true);
   }
   await page.getByRole("navigation").getByRole("link", { name: "Journal" }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("rabbit hole");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Journal");
   await page.locator(".post-card").first().click();
-  await expect(page.locator(".prose")).toContainText("Welcome to my little corner");
+  await expect(page.locator(".prose")).toContainText("This website contains my professional experience");
   await page.getByRole("link", { name: "Back to the journal" }).click();
   await expect(page).toHaveURL(/\/blog\/$/);
   expect(errors).toEqual([]);
+});
+
+test("copy is factual and the decorative interest labels are removed", async ({ page }) => {
+  const filler = /hello,?\s*world|curious human|curiosity|rabbit hole|human behind the keyboard|not just my readme|equal parts|work in progress|just like me|building & breaking things|lifelong learning|side quest|figuring things out|learning by building|always evolving|good things start|a growing collection|think out loud/i;
+  for (const route of ["./", "blog/", "blog/hello-world/", "404.html"]) {
+    await page.goto(route);
+    await expect(page.locator("body")).not.toContainText(filler);
+    expect(await page.title()).not.toMatch(filler);
+    for (const selector of ['meta[name="description"]', 'meta[property="og:title"]', 'meta[property="og:description"]']) {
+      expect(await page.locator(selector).getAttribute("content")).not.toMatch(filler);
+    }
+    await expect(page.locator(".interest-tags, .about-symbol")).toHaveCount(0);
+  }
+  await page.goto("./");
+  await expect(page.locator("#about h2")).toHaveText("About");
+  await expect(page.locator(".profile-card")).toContainText("Microsoft");
+  await expect(page.locator(".profile-card")).toContainText("Cornell University");
+  await expect(page.locator(".hero-heading")).toContainText("Software Engineer II");
+  await expect(page.locator(".pixel-caret")).toHaveCount(1);
+  await expect(page.locator(".site-footer")).not.toContainText("A work in progress");
 });
 
 test("journal topic controls work and expose their selected state", async ({ page }) => {
@@ -108,6 +128,6 @@ test("static content remains usable without JavaScript", async ({ browser }) => 
   await expect(page.locator("#about")).toBeVisible();
   await page.getByRole("navigation").getByRole("link", { name: "Journal" }).click();
   await page.locator(".post-card").click();
-  await expect(page.locator(".prose")).toContainText("An open notebook");
+  await expect(page.locator(".prose")).toContainText("My personal projects include a self-hosted homelab");
   await context.close();
 });

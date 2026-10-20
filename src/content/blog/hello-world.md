@@ -1,23 +1,21 @@
 ---
-title: "Hello, world. A little corner of my own."
-description: "A home for the things I build, the things I learn, and the occasional rabbit hole."
+title: "About this website"
+description: "An overview of the experience, projects, and posts on this site."
 date: 2026-10-19
 tags: ["Personal", "Notes"]
 draft: false
 ---
 
-Welcome to my little corner of the internet.
+This website contains my professional experience, personal projects, and blog posts.
 
-I wanted a space that could be more than a resume: somewhere for projects, notes, and ideas that don't fit neatly into a bullet point.
+## Background
 
-## A bit of both
+I'm a Software Engineer II at Microsoft and a Cornell computer science graduate. My work includes data infrastructure, developer tooling, and AI agents.
 
-My work lives at the intersection of software engineering, data infrastructure, and developer tools. My side projects tend to involve Linux servers, self-hosted services, and figuring out how the pieces fit together.
+## Projects
 
-This journal is a place for both sides: the useful things, the unfinished questions, and the small discoveries along the way.
+My personal projects include a self-hosted homelab with Linux servers, containerized applications, and dedicated backup infrastructure.
 
-## An open notebook
+## Posts
 
-Expect a mix of technical notes and personal updates. Nothing too polished, and no promise of having all the answers. Just a place to document the process.
-
-Consider this the first entry. More as I go.
+The journal is for technical notes, project updates, and personal posts.
