@@ -24,34 +24,40 @@ test("homepage, navigation, post, and all local links resolve without script err
   expect(errors).toEqual([]);
 });
 
-test("resume is the primary hero action and every resume link exports only the first tab", async ({ page }) => {
+test("resume is a prominent Work action, not a hero action, and exports only the first tab", async ({ page }) => {
   await page.goto("./");
-  const heroResume = page.locator(".hero-actions").getByRole("link", { name: "Full resume (PDF)", exact: true });
-  const resumeLinks = page.getByRole("link", { name: "Full resume (PDF)", exact: true });
-  await expect(resumeLinks).toHaveCount(2);
-  await expect(page.locator(".hero-actions > a").first()).toHaveText("Full resume (PDF) ↗");
-  await expect(heroResume).toHaveClass("button button-resume");
-  await expect(heroResume).toHaveCSS("background-color", "rgb(255, 66, 189)");
-  await expect(heroResume).toHaveCSS("color", "rgb(11, 11, 14)");
-  const hrefs = await resumeLinks.evaluateAll((links) => links.map((link) => link.getAttribute("href")!));
-  expect(new Set(hrefs).size).toBe(1);
-  for (const href of hrefs) {
-    const url = new URL(href);
-    expect(url.origin).toBe("https://docs.google.com");
-    expect(url.pathname).toBe("/document/d/1ahuyYG2i4bqLGUcgCTlEXR-dkEWrEo-YUtIplRq7wuQ/export");
-    expect(url.searchParams.get("format")).toBe("pdf");
-    expect(url.searchParams.get("tab")).toBe("t.0");
-  }
-  await expect(heroResume).toHaveAttribute("target", "_blank");
-  await expect(heroResume).toHaveAttribute("rel", "noopener noreferrer");
+  const workResume = page.locator("#work .section-heading").getByRole("link", { name: "Full resume (PDF)", exact: true });
+  await expect(page.getByRole("link", { name: "Full resume (PDF)", exact: true })).toHaveCount(1);
+  await expect(page.locator(".hero").getByRole("link", { name: /resume/i })).toHaveCount(0);
+  await expect(workResume).toHaveClass("button button-resume");
+  await expect(workResume).toHaveCSS("background-color", "rgb(255, 66, 189)");
+  await expect(workResume).toHaveCSS("color", "rgb(11, 11, 14)");
+  const url = new URL((await workResume.getAttribute("href"))!);
+  expect(url.origin).toBe("https://docs.google.com");
+  expect(url.pathname).toBe("/document/d/1ahuyYG2i4bqLGUcgCTlEXR-dkEWrEo-YUtIplRq7wuQ/export");
+  expect(url.searchParams.get("format")).toBe("pdf");
+  expect(url.searchParams.get("tab")).toBe("t.0");
+  await expect(workResume).toHaveAttribute("target", "_blank");
+  await expect(workResume).toHaveAttribute("rel", "noopener noreferrer");
   await expect(page.locator(".hero-actions").getByRole("link", { name: "View experience" })).toHaveAttribute("href", "#work");
+  await expect(page.locator(".hero-actions").getByRole("link", { name: "About" })).toHaveAttribute("href", "#about");
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    expect(await heroResume.evaluate((link) => {
+    await workResume.scrollIntoViewIfNeeded();
+    const dimensions = await workResume.evaluate((link) => {
       const bounds = link.getBoundingClientRect();
-      return bounds.left >= 0 && bounds.right <= innerWidth && bounds.top >= 0 && bounds.bottom <= innerHeight;
-    }), `prominent resume at ${width}px`).toBe(true);
-    expect(await page.locator(".hero-actions").evaluate((actions) => actions.scrollWidth <= actions.clientWidth)).toBe(true);
+      const heading = link.closest(".section-heading")!.getBoundingClientRect();
+      return {
+        height: bounds.height,
+        width: bounds.width,
+        contained: bounds.left >= heading.left && bounds.right <= heading.right,
+        visible: bounds.left >= 0 && bounds.right <= innerWidth && bounds.top >= 0 && bounds.bottom <= innerHeight,
+      };
+    });
+    expect(dimensions.height).toBeGreaterThanOrEqual(46);
+    expect(dimensions.width).toBeGreaterThan(180);
+    expect(dimensions.contained, `Work heading at ${width}px`).toBe(true);
+    expect(dimensions.visible, `prominent resume at ${width}px`).toBe(true);
   }
 });
 
