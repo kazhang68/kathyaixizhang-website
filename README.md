@@ -63,7 +63,7 @@ Work illustrations include a four-color waving Windows flag, an infinity loop, a
 
 ## Hosting
 
-`.github/workflows/deploy.yml` checks, builds, and deploys each push to `main`. In repository **Settings > Pages**, set **Source** to **GitHub Actions**. The site URL is `https://kazhang68.github.io/kathyaixizhang-website/`.
+`.github/workflows/deploy.yml` checks, builds, and deploys each push to `main`. In repository **Settings > Pages**, set **Source** to **GitHub Actions**. The site URL is `https://www.katspace.cc/`. Enable **Enforce HTTPS** there once GitHub has issued the custom-domain certificate so HTTP requests and the legacy Pages address redirect to HTTPS. An HTTPS canonical URL alone does not enforce secure connections.
 
 For a custom domain or different repository name, update `site` and `base` in `astro.config.mjs`. All internal links use the shared base-path helper. Google Fonts are optional network-loaded enhancements; system fonts are the fallback.
 
