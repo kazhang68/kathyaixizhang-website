@@ -61,7 +61,7 @@ test("email and social links are accessible header icons on every page, not foot
 test("header navigation and icons fit mobile screens and support keyboard focus", async ({ page }) => {
   await page.goto("./");
   const header = page.getByRole("banner");
-  for (const width of [320, 360, 390, 768, 1440]) {
+  for (const width of [173, 280, 320, 360, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     for (const name of ["Email", "GitHub", "LinkedIn"]) {
       await expect(header.getByRole("link", { name, exact: true })).toBeInViewport();
