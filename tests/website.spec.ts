@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { site } from "../src/lib/site";
 
 test("homepage, navigation, post, and all local links resolve without script errors", async ({ page, request }) => {
   const errors: string[] = [];
@@ -22,6 +23,74 @@ test("homepage, navigation, post, and all local links resolve without script err
   await page.getByRole("link", { name: "Back to the journal" }).click();
   await expect(page).toHaveURL(/\/blog\/$/);
   expect(errors).toEqual([]);
+});
+
+test("email and social links are accessible header icons on every page, not footer links", async ({ page }) => {
+  for (const route of ["./", "blog/", "blog/hello-world/", "404.html"]) {
+    await page.goto(route);
+    const header = page.getByRole("banner");
+    await expect(header.getByRole("group", { name: "Contact and social links" })).toBeVisible();
+    await expect(header.locator("svg")).toHaveCount(3);
+    for (const { name, href, external } of [
+      { name: "Email", href: `mailto:${site.email}`, external: false },
+      { name: "GitHub", href: site.github, external: true },
+      { name: "LinkedIn", href: site.linkedin, external: true },
+    ]) {
+      const link = header.getByRole("link", { name, exact: true });
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", href);
+      await expect(link).toHaveAttribute("title", name);
+      await expect(link).toHaveText("");
+      await expect(link).toHaveCSS("border-width", "0px");
+      await expect(link).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      await expect(link.locator("svg")).toBeVisible();
+      await expect(link.locator("svg")).toHaveAttribute("aria-hidden", "true");
+      await expect(link.locator("svg")).toHaveAttribute("focusable", "false");
+      await expect(link.locator("svg path")).toHaveAttribute("d", /.+/);
+      if (external) {
+        await expect(link).toHaveAttribute("target", "_blank");
+        await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+      } else {
+        await expect(link).not.toHaveAttribute("target", "_blank");
+      }
+    }
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: /GitHub|LinkedIn|Email/ })).toHaveCount(0);
+  }
+});
+
+test("header navigation and icons fit mobile screens and support keyboard focus", async ({ page }) => {
+  await page.goto("./");
+  const header = page.getByRole("banner");
+  for (const width of [320, 360, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const name of ["Email", "GitHub", "LinkedIn"]) {
+      await expect(header.getByRole("link", { name, exact: true })).toBeInViewport();
+    }
+    const layout = await header.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const links = [...element.querySelectorAll("a")].map((link) => link.getBoundingClientRect());
+      return {
+        contained: links.every((link) => link.left >= bounds.left && link.right <= bounds.right && link.top >= bounds.top && link.bottom <= bounds.bottom),
+        nonoverlapping: links.every((link, index) => links.slice(index + 1).every((other) =>
+          link.right <= other.left || other.right <= link.left || link.bottom <= other.top || other.bottom <= link.top,
+        )),
+        touchTargets: [...element.querySelectorAll(".header-socials a")].every((link) => {
+          const target = link.getBoundingClientRect();
+          return target.width >= 44 && target.height >= 44;
+        }),
+      };
+    });
+    expect(layout.contained, `header links at ${width}px`).toBe(true);
+    expect(layout.nonoverlapping, `header links at ${width}px`).toBe(true);
+    expect(layout.touchTargets, `icon touch targets at ${width}px`).toBe(true);
+  }
+  await header.getByRole("link", { name: "Email", exact: true }).focus();
+  for (const name of ["GitHub", "LinkedIn"]) {
+    await page.keyboard.press("Tab");
+    const link = header.getByRole("link", { name, exact: true });
+    await expect(link).toBeFocused();
+    await expect(link).toHaveCSS("outline-style", "solid");
+  }
 });
 
 test("resume is a prominent Work action, not a hero action, and exports only the first tab", async ({ page }) => {
@@ -409,6 +478,9 @@ test("static content remains usable without JavaScript", async ({ browser }) => 
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   await page.goto("http://localhost:4321/");
+  for (const name of ["Email", "GitHub", "LinkedIn"]) {
+    await expect(page.getByRole("banner").getByRole("link", { name, exact: true })).toBeVisible();
+  }
   await expect(page.locator("#about")).toBeVisible();
   await page.getByRole("navigation").getByRole("link", { name: "Journal" }).click();
   await page.locator(".post-card").click();

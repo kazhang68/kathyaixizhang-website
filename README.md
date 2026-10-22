@@ -51,6 +51,8 @@ The interface uses monospace typography with mostly white and gray body copy. Ti
 
 The header spells `kathy zhang` using the original lowercase DOS Rebel FIGlet glyphs and their built-in dotted shading, rather than drawn polygon approximations. A continuous diagonal rainbow and left-to-right decoding animate the letters. The full name stays on one line and scales with the available width. The glyph subset is embedded at build time, with no new dependency or browser font request; attribution and the collection's distribution notice are in [`public/font-credits.txt`](public/font-credits.txt).
 
+The shared header has accessible email, GitHub, and LinkedIn SVG icon links, including on mobile. Their destinations come from `src/lib/site.ts`; the footer no longer repeats social links. Bootstrap Icons attribution and the MIT license are in [`public/icon-credits.txt`](public/icon-credits.txt).
+
 Work illustrations include a four-color waving Windows flag, an infinity loop, and a server rack; journal thumbnails use more detailed preformatted drawings. Decorative art is hidden from screen readers, with real text headings and link labels provided separately.
 
 - `src/pages/index.astro`: About, experience, and homepage copy.
